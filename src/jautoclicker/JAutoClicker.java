@@ -1,16 +1,23 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2018 Roger Lovera
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jautoclicker;
 
-import java.awt.Dimension;
-import java.awt.SplashScreen;
-import java.awt.Toolkit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
 /**
@@ -18,58 +25,32 @@ import org.jnativehook.NativeHookException;
  * @author Roger Lovera
  */
 public class JAutoClicker {
-    //Atributos
-    
-    
     //Acciones
-
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {    
-        // TODO code application logic here  
-        
-        
         //Variables
-        Dimension resolucion; //Almacena las resolucion de pantalla actual
         Ventana ventana; //Objeto que contiene la Interfaz de usuario
+        JNativeHook jNativeHook;
         
         //Inicializacion
-        resolucion = Toolkit.getDefaultToolkit().getScreenSize(); //Obtiene la resolucion actual de la pantalla
         ventana = new Ventana(); //Instancia un objeto de clase Ventana 
-        ventana.setLocation( //Ubica la ventana en el centro de la pantalla
-                (resolucion.width-ventana.getSize().width)/2, 
-                (resolucion.height-ventana.getSize().height)/2);
+        ventana.setLocationRelativeTo(null); //Ubica la ventana en el centro de la pantalla
         ventana.setAlwaysOnTop(true); //Mantiene la ventana siempre al frente
         
         //Inicialización de JNativeHook
-        try{
-            GlobalScreen.registerNativeHook();
-            
-            //Desactivar salidas por consola
-            Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
-            logger.setLevel(Level.OFF);            
-            logger.setUseParentHandlers(false);
-            
-        } catch (NativeHookException e){
-            System.out.println(e);
+        try {
+            jNativeHook = new JNativeHook();
+            ventana.setJNativeHook(jNativeHook);
+            jNativeHook.addMouseListener(ventana);
+            jNativeHook.addKeyListener(ventana);
+        } catch (NativeHookException ex) {
+            Logger.getLogger(JAutoClicker.class.getName()).log(Level.SEVERE, null, ex);
             System.exit(1);
         }
-        
-        GlobalScreen.addNativeMouseListener(ventana);    
-        GlobalScreen.addNativeMouseMotionListener(ventana);
-        GlobalScreen.addNativeKeyListener(ventana);                
-        //Fin inicialización de JNativeHook
-        
-        //Tiempo para el Splash
-        try{
-            Thread.sleep(2000);
-        }catch(InterruptedException e){
-            System.out.println(e);
-        }
-            
-        ventana.setVisible(true); //Muesta la ventana               
-    }    
-
-    
+        //Fin inicialización de JNativeHook        
+        ventana.setVisible(true); //Muesta la ventana   
+    }   
 }

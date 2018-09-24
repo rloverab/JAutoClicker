@@ -1,7 +1,18 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2018 Roger Lovera
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jautoclicker;
 
@@ -10,6 +21,8 @@ import java.awt.MouseInfo;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
+import java.sql.Time;
+import java.util.Date;
 import javax.swing.JFrame;
 import org.jnativehook.GlobalScreen;
 
@@ -110,8 +123,7 @@ public class RobotMouse implements Runnable{
                     robot.mousePress(InputEvent.getMaskForButton(moveMouse.getBoton()));                    
                     break;
                 case MoveMouse.CLICK_SOLTAR:                    
-                    robot.mouseRelease(InputEvent.getMaskForButton(moveMouse.getBoton()));
-                    break;                
+                    robot.mouseRelease(InputEvent.getMaskForButton(moveMouse.getBoton()));                    
             }
         }
     }
@@ -130,20 +142,30 @@ public class RobotMouse implements Runnable{
         double yPasos;
         double x = (double)xInicio;
         double y = (double)yInicio;
-        
+        int divisor = (int)((this.distanciaRecorrido(xInicio, yInicio, xFinal, yFinal)/retardo) + 2);
+                
         xPasos = ((double)(xFinal - xInicio)/(double)(retardo));
-        yPasos = ((double)(yFinal - yInicio)/(double)(retardo));
-
+        yPasos = ((double)(yFinal - yInicio)/(double)(retardo));            
+        
         for(int i = 0; i < retardo; i++){
-            if(detener){ //Para interrumpir el hilo
+            if(detener){ //Para interrumpir el hilo          
                 break;
+            }            
+            
+            if(i % 2 == 0){
+                robot.mouseMove((int)x, (int)y);
+                robot.delay(1);
             }
-            robot.mouseMove((int)x, (int)y);
+                
             x += xPasos;
-            y += yPasos;
-            //robot.delay(1);                
-            retardo(1);
+            y += yPasos;            
         }
+        System.out.println(
+                new Date() + "\n" +
+                "Diferencia X: " + (xFinal - xInicio) + "\n" +
+                "Diferencia Y: " + (yFinal - yInicio) + "\n" +
+                "Hipotenusa: " + this.distanciaRecorrido(xInicio, yInicio, xFinal, yFinal) + "\n" +
+                "Divisor: " + divisor);
     }   
     
     private void reproducirAccion(
@@ -164,14 +186,13 @@ public class RobotMouse implements Runnable{
             principal:
             for(int i = 0; i < iteraciones; i++){
                 if(detener){ //Para interrumpir el hilo                    
-                    break;
-                    
+                    break;                    
                 }
+                
                 for(int j = posicionInicial; j <= posicionFinal; j++){
                     if(detener){ //Para interrumpir el hilo
                         break principal;
                     }
-                    ventana.setFilaSeleccionada(j);
                     
                     if(indiceBucle != listaMoveMouse.getObjeto(j).getIndiceBucle()){                        
                         reproducirAccion( //Llamado recursivo
@@ -194,11 +215,15 @@ public class RobotMouse implements Runnable{
                             accionMouse(listaMoveMouse.getObjeto(j));
                         }
                     }
+                    ventana.setFilaSeleccionada(j);
                 }            
             }            
-            //detener = false;
             ventana.actualizarControles(false);
         }
+    }
+    
+    private double distanciaRecorrido(int xInicio, int yInicio, int xFinal, int yFinal){
+        return Math.sqrt(Math.pow((double)(xFinal - xInicio), 2) + Math.pow((double)(yFinal - yInicio), 2));        
     }
 
     /**

@@ -1,22 +1,41 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2018 Roger Lovera
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jautoclicker;
+
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Roger Lovera
  */
-public class AcercaDe extends javax.swing.JPanel {
+public class AcercaDe extends javax.swing.JDialog {
 
     /**
      * Creates new form AcercaDe
      */
-    public AcercaDe() {
+    public AcercaDe(java.awt.Frame parent, boolean modal) {
+        super(parent, modal);
         initComponents();
     }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -27,31 +46,177 @@ public class AcercaDe extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel2 = new javax.swing.JLabel();
+        lblLogo = new javax.swing.JLabel();
+        panelAcercaDe = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        btnDonativo = new javax.swing.JButton();
+        btnCerrar = new javax.swing.JButton();
+        btnSitioProyecto = new javax.swing.JButton();
 
-        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jautoclicker/recursos/acerca.png"))); // NOI18N
-        jLabel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("jautoclicker/Bundle"); // NOI18N
+        setTitle(bundle.getString("ACERCA DE")); // NOI18N
+        setResizable(false);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
+        lblLogo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jautoclicker/recursos/acerca.png"))); // NOI18N
+        lblLogo.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        panelAcercaDe.setBorder(javax.swing.BorderFactory.createTitledBorder("JAutoClicker"));
+
+        jLabel1.setFont(new java.awt.Font("Dialog", 0, 12)); // NOI18N
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jLabel1.setText(bundle.getString("ACERCADEJAC")); // NOI18N
+        jLabel1.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+
+        btnDonativo.setText(bundle.getString("DONATIVO PAYPAL")); // NOI18N
+        btnDonativo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDonativoActionPerformed(evt);
+            }
+        });
+
+        btnCerrar.setText(bundle.getString("CERRAR")); // NOI18N
+        btnCerrar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCerrarActionPerformed(evt);
+            }
+        });
+
+        btnSitioProyecto.setText(bundle.getString("SITIO DEL PROYECTO")); // NOI18N
+        btnSitioProyecto.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSitioProyectoActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout panelAcercaDeLayout = new javax.swing.GroupLayout(panelAcercaDe);
+        panelAcercaDe.setLayout(panelAcercaDeLayout);
+        panelAcercaDeLayout.setHorizontalGroup(
+            panelAcercaDeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelAcercaDeLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panelAcercaDeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addGroup(panelAcercaDeLayout.createSequentialGroup()
+                        .addComponent(btnDonativo)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnSitioProyecto)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnCerrar)))
+                .addContainerGap())
+        );
+        panelAcercaDeLayout.setVerticalGroup(
+            panelAcercaDeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelAcercaDeLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(panelAcercaDeLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnCerrar)
+                    .addComponent(btnDonativo)
+                    .addComponent(btnSitioProyecto))
+                .addContainerGap())
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel2)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(lblLogo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(panelAcercaDe, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel2)
-                .addContainerGap(224, Short.MAX_VALUE))
+                .addComponent(lblLogo)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(panelAcercaDe, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
+
+        pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnCerrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCerrarActionPerformed
+        // TODO add your handling code here:
+        this.dispose();
+    }//GEN-LAST:event_btnCerrarActionPerformed
+
+    private void btnDonativoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDonativoActionPerformed
+        // TODO add your handling code here:
+        if(Desktop.isDesktopSupported()){
+            try {
+                Desktop.getDesktop().browse(URI.create("https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=EVGQ6CM66V7XY&lc=GB&item_name=Desarrollo%20JAutoClicker&item_number=DEVJAC&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donate_SM%2egif%3aNonHosted"));
+            } catch (IOException ex) {
+                Logger.getLogger(AcercaDe.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_btnDonativoActionPerformed
+
+    private void btnSitioProyectoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSitioProyectoActionPerformed
+        // TODO add your handling code here:
+        if(Desktop.isDesktopSupported()){
+            try {
+                Desktop.getDesktop().browse(URI.create("https://github.com/rloverab/JAutoClicker"));
+            } catch (IOException ex) {
+                Logger.getLogger(AcercaDe.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_btnSitioProyectoActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(AcercaDe.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(AcercaDe.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(AcercaDe.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(AcercaDe.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the dialog */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                AcercaDe dialog = new AcercaDe(new javax.swing.JFrame(), true);
+                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(java.awt.event.WindowEvent e) {
+                        System.exit(0);
+                    }
+                });
+                dialog.setVisible(true);
+            }
+        });
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel jLabel2;
+    private javax.swing.JButton btnCerrar;
+    private javax.swing.JButton btnDonativo;
+    private javax.swing.JButton btnSitioProyecto;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel lblLogo;
+    private javax.swing.JPanel panelAcercaDe;
     // End of variables declaration//GEN-END:variables
 }

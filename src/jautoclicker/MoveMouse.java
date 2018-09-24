@@ -1,7 +1,18 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2018 Roger Lovera
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package jautoclicker;
 
@@ -29,13 +40,13 @@ public class MoveMouse implements Serializable,Comparable<MoveMouse>{
     public static final int CLICK_DOBLE       = 2;
     public static final int CLICK_MANTENER    = 3;
     public static final int CLICK_SOLTAR      = 4;
-    private final ResourceBundle bundle;
+    //private final ResourceBundle bundle;
     
   
     
     //Constructores
     public MoveMouse(){
-        this.bundle = ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault());
+        //this.bundle = ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault());
         GRUPOS = new char[]{
             'A','B','C','D','E','F','G',
             'H','I','J','K','L','M','N',
@@ -101,15 +112,20 @@ public class MoveMouse implements Serializable,Comparable<MoveMouse>{
     public String getPulsacionTipo(){
         switch(pulsacion){
             case 0: //return "Ninguno";
-                return bundle.getString("NINGUNO");
+                //return bundle.getString("NINGUNO");
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("NINGUNO");
             case 1: //return "Simple";
-                return bundle.getString("SIMPLE");
+                //return bundle.getString("SIMPLE");
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("SIMPLE");
             case 2: //return "Doble";
-                return bundle.getString("DOBLE");
+                //return bundle.getString("DOBLE");
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DOBLE");
             case 3: //return "Mantener";
-                return bundle.getString("MANTENER");
+                //return bundle.getString("MANTENER");
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("MANTENER");
             case 4: //return "Soltar";
-                return bundle.getString("SOLTAR");
+                //return bundle.getString("SOLTAR");
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("SOLTAR");
         }
         return null;        
     }
@@ -118,26 +134,32 @@ public class MoveMouse implements Serializable,Comparable<MoveMouse>{
         switch (boton){            
             case MouseEvent.BUTTON1: 
                 //return "Izquierdo";
-                return bundle.getString("IZQUIERDO");
+                //return bundle.getString("IZQUIERDO");
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("IZQUIERDO");
             case MouseEvent.BUTTON2:                
                 if(Validador.esWindows()){
                     //return "Centro";
-                    return bundle.getString("CENTRO");
+                    //return bundle.getString("CENTRO");
+                    return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("CENTRO");
                 }else{
                     //return "Derecho";
-                    return bundle.getString("DERECHO");
+                    //return bundle.getString("DERECHO");
+                    return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DERECHO");
                 }                
             case MouseEvent.BUTTON3:                 
                 if(Validador.esWindows()){
                     //return "Derecho";
-                    return bundle.getString("DERECHO");
+                    //return bundle.getString("DERECHO");
+                    return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DERECHO");
                 }else{
                     //return "Centro";
-                    return bundle.getString("CENTRO");
+                    //return bundle.getString("CENTRO");
+                    return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("CENTRO");
                 }                 
             default:
                 //return "Ninguno";
-                return bundle.getString("NINGUNO");
+                //return bundle.getString("NINGUNO");
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("NINGUNO");
         }
     }
     
