@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
@@ -1212,21 +1213,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     
     @Override
     public void nativeMouseMoved(NativeMouseEvent nme) {
-        int x, y;
-        
-        x = nme.getX();
-        y = nme.getY();
-        if(x < 0){
-            x = 0;
-        }
-
-        if (y < 0){
-            y = 0;
-        }
-        
-        lblCoordenadas.setText("("+x+","+y+")");
+        /*Sin implementar*/
     }
-    
 
     @Override
     public void nativeMouseDragged(NativeMouseEvent nme) {
@@ -1355,19 +1343,15 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_itemAcercaDeActionPerformed
 
     private void itemManualActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemManualActionPerformed
-        // TODO add your handling code here:
-        if(Desktop.isDesktopSupported()){
+        if(Desktop.isDesktopSupported()){        
             try {
-                System.out.println(this.getLocale().getLanguage());
-                if(!this.getLocale().getLanguage().equals("es")){
-                    Desktop.getDesktop().open(new File(this.getClass().getResource("recursos/Manual JAC EN.pdf").toURI()));
-                }else{
-                    Desktop.getDesktop().open(new File(this.getClass().getResource("recursos/Manual JAC ES.pdf").toURI()));
+                if(!this.getLocale().getLanguage().equals("es")){                 
+                    Desktop.getDesktop().open(new File("Manual_EN.pdf"));                    
+                }else{                    
+                    Desktop.getDesktop().open(new File("Manual_Es.pdf"));
                 }
             } catch (IOException ex) {
-                Logger.getLogger(AcercaDe.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (URISyntaxException ex) {
-                Logger.getLogger(Ventana.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Ventana.class.getName()).log(Level.SEVERE, null, ex);                
             }
         }
     }//GEN-LAST:event_itemManualActionPerformed
