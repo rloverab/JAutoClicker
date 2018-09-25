@@ -9,6 +9,10 @@ Software para ejecución de clics automáticos personalizable y multiplataforma 
 capturar coordenadas instantáneas y Minimizar/Maximizar la ventana del programa.
 * Guardar y recupera acciones programadas mediante el uso de archivos.
 * Es compatible con los sistemas operativos Microsoft Windows, GNU/Linux y Mac OS.
+
+## Descarga
+[JAutoClicker V1.0](https://github.com/rloverab/JAutoClicker/releases/download/untagged-757c5554d2c3db22190d/JAutoClicker.V1.0.zip)
+
 ## Acerca de el software y el motivo de su desarrollo
 Soy usuario de este tipo de software. He usado muchos y aunque han sido muy útiles no me siento cómodo con ellos. 
 Algunos carecían de funciones que me hubiera gustado que tuvieran. Al final, decidí desarrollar mi propio software con las 
@@ -18,7 +22,7 @@ el aporte nuevas ideas, sugerencias y observaciones o también mediante el desar
 GNU/Linux y Microsoft Windows, por lo tanto, esta aplicación debia ser capaz de funcionar en ambos entornos, así que opté por 
 desarrollarla usando el lenguaje JAVA.
 
-## Datos de desarrollo
+## Datos del desarrollo
 * Lenguaje de programación JAVA
 * JDK 8
 * Netbeans IDE 8.2
