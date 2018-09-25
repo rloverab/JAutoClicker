@@ -1028,6 +1028,15 @@ is divided into following sections:
     <target name="-post-jar">
         <!-- Empty placeholder for easier customization. -->
         <!-- You can override this target in the ../build.xml file. -->
+        <!-- MIS ADICIONES -->
+        <copy todir="${dist.dir}">
+            <fileset dir="${src.dir}/jautoclicker/manual" />
+        </copy>
+        <echo file="${dist.dir}/JAutoClicker.bat">@echo off
+START javaw -jar ${application.title}.jar</echo>
+        <echo file="${dist.dir}/JAutoClicker.sh">#!/bin/bash
+java -jar ${application.title}.jar</echo>
+        <zip destfile="${dist.dir}/${application.title}.zip" basedir="${dist.dir}" />
     </target>
     <target depends="init,compile,-pre-jar,-do-jar-without-libraries,-do-jar-with-libraries,-post-jar" name="-do-jar"/>
     <target depends="init,compile,-pre-jar,-do-jar,-post-jar" description="Build JAR." name="jar"/>
@@ -1417,4 +1426,5 @@ is divided into following sections:
             </propertyset>
         </ant>
     </target>
+    <!-- MIS ADICIONES. -->    
 </project>
