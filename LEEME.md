@@ -11,7 +11,7 @@ capturar coordenadas instantáneas y Minimizar/Maximizar la ventana del programa
 * Es compatible con los sistemas operativos Microsoft Windows, GNU/Linux y Mac OS.
 
 ## Descarga
-[JAutoClicker V1.0](https://github.com/rloverab/JAutoClicker/releases/download/untagged-757c5554d2c3db22190d/JAutoClicker.V1.0.zip)
+* 24/09/2018 - [JAutoClicker V1.0](https://github.com/rloverab/JAutoClicker/releases/download/untagged-757c5554d2c3db22190d/JAutoClicker.V1.0.zip)
 
 ## Acerca de el software y el motivo de su desarrollo
 Soy usuario de este tipo de software. He usado muchos y aunque han sido muy útiles no me siento cómodo con ellos. 
