@@ -15,7 +15,7 @@ I am a user of this type of software. I have used many and although they have be
 ## Development data
 * JAVA programming language
 * JDK 8
-* IDE Netbeans 8.2
+* Netbeans IDE 8.2
 * JNaviteHook 2.1.0 (external library)
 
 ## Contact and contributions
