@@ -17,6 +17,7 @@
 package jautoclicker;
 
 import java.awt.Desktop;
+import java.awt.Image;
 import java.awt.MouseInfo;
 import java.awt.Toolkit;
 import java.awt.event.ComponentAdapter;
@@ -28,11 +29,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -189,6 +187,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("jautoclicker/Bundle"); // NOI18N
         setTitle(bundle.getString("JAUTOCLICKER")); // NOI18N
+        setIconImage(getIconImage());
         setResizable(false);
         setSize(new java.awt.Dimension(565, 590));
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -395,10 +394,10 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             }
         });
         spinIteraciones.addInputMethodListener(new java.awt.event.InputMethodListener() {
-            public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
-            }
             public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
                 spinIteracionesCaretPositionChanged(evt);
+            }
+            public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
             }
         });
 
@@ -1056,7 +1055,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         spinIteraciones.setValue(1);
         cbxBoton.setSelectedIndex(0);
         cbxPulsacion.setSelectedIndex(0);
-        chkMinimizar.setSelected(true);
+        chkMinimizar.setSelected(false);
         chkAnimar.setSelected(false);
         hashCode = listaMoveMouse.hashCodeAlterno();
         while(modelo.getRowCount() > 0){
@@ -1213,12 +1212,30 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     
     @Override
     public void nativeMouseMoved(NativeMouseEvent nme) {
-        /*Sin implementar*/
+        int x, y;
+        
+        x = nme.getX();
+        y = nme.getY();
+        if(x < 0){
+            x = 0;
+        }
+
+        if (y < 0){
+            y = 0;
+        }
+        
+        lblCoordenadas.setText("("+x+","+y+")");
     }
 
     @Override
     public void nativeMouseDragged(NativeMouseEvent nme) {
         /*Sin implementar*/
+    }
+    
+    //Métodos abstractos de la clase Image
+    @Override
+    public Image getIconImage(){
+        return Toolkit.getDefaultToolkit().getImage(this.getClass().getResource("recursos/iconJAC-16x18.png"));
     }
     
     private void btnCapturarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCapturarActionPerformed
@@ -1348,7 +1365,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 if(!this.getLocale().getLanguage().equals("es")){                 
                     Desktop.getDesktop().open(new File("Manual_EN.pdf"));                    
                 }else{                    
-                    Desktop.getDesktop().open(new File("Manual_Es.pdf"));
+                    Desktop.getDesktop().open(new File("Manual_ES.pdf"));
                 }
             } catch (IOException ex) {
                 Logger.getLogger(Ventana.class.getName()).log(Level.SEVERE, null, ex);                
