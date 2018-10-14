@@ -190,6 +190,7 @@ public class RobotMouse implements Runnable{
                 }
                 
                 for(int j = posicionInicial; j <= posicionFinal; j++){
+                    ventana.setFilaSeleccionada(j);
                     if(detener){ //Para interrumpir el hilo
                         break principal;
                     }
@@ -215,7 +216,6 @@ public class RobotMouse implements Runnable{
                             accionMouse(listaMoveMouse.getObjeto(j));
                         }
                     }
-                    ventana.setFilaSeleccionada(j);
                 }            
             }            
             ventana.actualizarControles(false);
