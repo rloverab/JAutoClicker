@@ -21,8 +21,6 @@ import java.awt.MouseInfo;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
-import java.sql.Time;
-import java.util.Date;
 import javax.swing.JFrame;
 import org.jnativehook.GlobalScreen;
 
@@ -138,34 +136,26 @@ public class RobotMouse implements Runnable{
     }
     
     private void moverMouse(int xInicio, int yInicio, int xFinal, int yFinal, int retardo){
+        long inicio = System.currentTimeMillis();
+        long fin = inicio + (long)retardo;
+        
         double xPasos;
         double yPasos;
-        double x = (double)xInicio;
-        double y = (double)yInicio;
-        int divisor = (int)((this.distanciaRecorrido(xInicio, yInicio, xFinal, yFinal)/retardo) + 2);
+        double x;
+        double y;
                 
         xPasos = ((double)(xFinal - xInicio)/(double)(retardo));
         yPasos = ((double)(yFinal - yInicio)/(double)(retardo));            
         
-        for(int i = 0; i < retardo; i++){
+        while (System.currentTimeMillis() < fin){
             if(detener){ //Para interrumpir el hilo          
                 break;
             }            
             
-            if(i % 2 == 0){
-                robot.mouseMove((int)x, (int)y);
-                robot.delay(1);
-            }
-                
-            x += xPasos;
-            y += yPasos;            
+            x = xInicio + ((double)(System.currentTimeMillis()-inicio))*xPasos;
+            y = yInicio +((double)(System.currentTimeMillis()-inicio))*yPasos;
+            robot.mouseMove((int)x, (int)y);
         }
-        System.out.println(
-                new Date() + "\n" +
-                "Diferencia X: " + (xFinal - xInicio) + "\n" +
-                "Diferencia Y: " + (yFinal - yInicio) + "\n" +
-                "Hipotenusa: " + this.distanciaRecorrido(xInicio, yInicio, xFinal, yFinal) + "\n" +
-                "Divisor: " + divisor);
     }   
     
     private void reproducirAccion(
@@ -222,10 +212,6 @@ public class RobotMouse implements Runnable{
         }
     }
     
-    private double distanciaRecorrido(int xInicio, int yInicio, int xFinal, int yFinal){
-        return Math.sqrt(Math.pow((double)(xFinal - xInicio), 2) + Math.pow((double)(yFinal - yInicio), 2));        
-    }
-
     /**
      * Detiene la ejecución de reproduccion de acciones programadas del cursor.
      */
