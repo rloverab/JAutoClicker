@@ -20,30 +20,22 @@ import java.awt.Desktop;
 import java.awt.Image;
 import java.awt.MouseInfo;
 import java.awt.Toolkit;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JSpinner;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 import org.jnativehook.mouse.NativeMouseEvent;
@@ -57,10 +49,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     //Atributos 
     private String nombreArchivo;
     private Runnable robotMouse;
-    private MoveMouse moveMouse;
-    private ListaMoveMouse listaMoveMouse;
-    private final DefaultTableModel modelo;    
-    private final String[] columnas;
+    private Acciones acciones;
     private final DefaultComboBoxModel botones;
     private final DefaultComboBoxModel pulsacion;    
     private int hashCode;
@@ -68,6 +57,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private boolean capturarCoordenada;
     private boolean capturarAccion;
     private JNativeHook jNativeHook;
+    
+    private DefaultTreeModel dtm;
     
     //SubClases
     class KeySpinner extends KeyAdapter{
@@ -84,36 +75,12 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
      */
      
     public Ventana() {     
-        teclasPulsadas = new ArrayList();
+        teclasPulsadas = new ArrayList<>();
         nombreArchivo = "";
         pulsacion = new DefaultComboBoxModel(new String[] { java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("SIMPLE"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("DOBLE"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("MANTENER"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("SOLTAR") });
         botones = new DefaultComboBoxModel(new String[] { java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("NINGUNO"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("IZQUIERDO"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("CENTRO"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("DERECHO") });
         
         initComponents(); 
-      
-        listaMoveMouse = new ListaMoveMouse();
-        hashCode = listaMoveMouse.hashCodeAlterno();
-        
-        columnas = new String[]{
-            "#", 
-            "X", 
-            "Y", 
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("RETARDO (MS)"), 
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("BOTÓN"),
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("PULSACIÓN")};
-        
-        modelo = new DefaultTableModel(){
-            private final boolean [] tableColums = {false, false, false, false, false, false};
-            
-            @Override
-            public final boolean isCellEditable(int row, int column) {
-                return this.tableColums[column];
-            }
-        };
-        
-        modelo.setColumnIdentifiers(columnas);
-        
-        prepararTabla();   
         
         lblCoordenadas.setText("("+
                 MouseInfo.getPointerInfo().getLocation().x+","+
@@ -128,7 +95,25 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         ((JSpinner.DefaultEditor)spinY.getEditor()).getTextField().addKeyListener(new KeySpinner());
         ((JSpinner.DefaultEditor)spinDelay.getEditor()).getTextField().addKeyListener(new KeySpinner());
         
-        actualizarBotones();        
+        //actualizarBotones();  
+        
+        acciones = new Acciones();        
+        acciones.addAccion(new Accion());
+        acciones.getAccion(0).setBucle(new Bucle());
+        
+        DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode();
+        dtm = new DefaultTreeModel(dmtn);
+        dmtn.setUserObject(acciones.getAccion(0));
+        treeAcciones.setModel(dtm);
+        treeAcciones.setSelectionInterval(0, 0);
+        
+        
+        treeAcciones.addTreeSelectionListener(new TreeSelectionListener(){
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                
+            }
+        });
     }
 
     /**
@@ -161,6 +146,9 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         lblUbicacionActial = new javax.swing.JLabel();
         lblCoordenadas = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
+        jPanel1 = new javax.swing.JPanel();
+        cbxAccionEspecial = new javax.swing.JComboBox<>();
+        btnAgregar1 = new javax.swing.JButton();
         panelOrdenEjecucion = new javax.swing.JPanel();
         btnBorrar = new javax.swing.JButton();
         btnBajar = new javax.swing.JButton();
@@ -169,9 +157,9 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         btnPlay = new javax.swing.JButton();
         jLabel4 = new javax.swing.JLabel();
         chkAnimar = new javax.swing.JCheckBox();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tblClicks = new javax.swing.JTable();
         chkMinimizar = new javax.swing.JCheckBox();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        treeAcciones = new javax.swing.JTree();
         jMenuBar1 = new javax.swing.JMenuBar();
         menuArchivo = new javax.swing.JMenu();
         itemNuevo = new javax.swing.JMenuItem();
@@ -251,10 +239,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             .addGroup(panelDatosLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelDatosLayout.createSequentialGroup()
-                        .addComponent(btnCapturar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
-                        .addComponent(btnAgregar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
                         .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(lblBoton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -270,14 +254,18 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(spinY, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
+                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(64, 64, 64)
+                        .addComponent(spinDelay, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(panelDatosLayout.createSequentialGroup()
+                        .addComponent(btnCapturar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
+                        .addComponent(btnAgregar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
-                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(64, 64, 64)
-                        .addComponent(spinDelay, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         panelDatosLayout.setVerticalGroup(
@@ -303,10 +291,10 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(spinDelay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAgregar)
-                    .addComponent(btnCapturar))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnCapturar)
+                    .addComponent(btnAgregar))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -340,7 +328,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                             .addComponent(lblF8, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(lvlF4)
                             .addComponent(jLabel1))
-                        .addGap(0, 11, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         panelInformacionLayout.setVerticalGroup(
@@ -356,6 +344,62 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 .addComponent(lblF8)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel1)
+                .addContainerGap())
+        );
+
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Acción especial"));
+
+        cbxAccionEspecial.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Bucle", "Condicional", "Hotkey: Copiar - Control C", "Hotkey: Cortar - Control X", "Hotkey: Pegar - Control V", "Hotkey: Cerrar - Control F4", "Hotkey: Salir - Alt + F4", "Hotkey: Deshacer - Control Z", "Hotkey: Rehacer - Control Y", "Hotkey: Cambiar ventana - Alt Tab" }));
+
+        btnAgregar1.setText(bundle.getString("AGREGAR")); // NOI18N
+        btnAgregar1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAgregar1ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(cbxAccionEspecial, javax.swing.GroupLayout.PREFERRED_SIZE, 330, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnAgregar1, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(cbxAccionEspecial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnAgregar1))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout panelPrincipalLayout = new javax.swing.GroupLayout(panelPrincipal);
+        panelPrincipal.setLayout(panelPrincipalLayout);
+        panelPrincipalLayout.setHorizontalGroup(
+            panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPrincipalLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(panelPrincipalLayout.createSequentialGroup()
+                        .addComponent(panelDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(panelInformacion, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+        );
+        panelPrincipalLayout.setVerticalGroup(
+            panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelPrincipalLayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(panelInformacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(panelDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -412,51 +456,19 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
         chkAnimar.setText(bundle.getString("ANIMAR")); // NOI18N
 
-        jScrollPane1.setAutoscrolls(true);
-        jScrollPane1.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jScrollPane1.setFocusTraversalPolicyProvider(true);
-        jScrollPane1.setPreferredSize(new java.awt.Dimension(360, 244));
-
-        tblClicks.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
-            }
-        ));
-        tblClicks.setFillsViewportHeight(true);
-        tblClicks.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_INTERVAL_SELECTION);
-        tblClicks.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                tblClicksMousePressed(evt);
-            }
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                tblClicksMouseClicked(evt);
-            }
-        });
-        tblClicks.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                tblClicksKeyPressed(evt);
-            }
-        });
-        jScrollPane1.setViewportView(tblClicks);
-
         chkMinimizar.setText(bundle.getString("MINIMIZAR")); // NOI18N
+
+        jScrollPane2.setViewportView(treeAcciones);
 
         javax.swing.GroupLayout panelOrdenEjecucionLayout = new javax.swing.GroupLayout(panelOrdenEjecucion);
         panelOrdenEjecucion.setLayout(panelOrdenEjecucionLayout);
         panelOrdenEjecucionLayout.setHorizontalGroup(
             panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
-                .addGap(7, 7, 7)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
-                        .addGap(17, 17, 17)
+                        .addGap(24, 24, 24)
                         .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(btnBorrar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnBajar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -464,7 +476,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                             .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(spinIteraciones)))
                     .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
-                        .addGap(18, 18, 18)
+                        .addGap(25, 25, 25)
                         .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
                                 .addComponent(chkMinimizar)
@@ -478,7 +490,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
                         .addComponent(btnSubir)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -493,34 +505,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                         .addComponent(chkMinimizar)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(chkAnimar)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnPlay)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        javax.swing.GroupLayout panelPrincipalLayout = new javax.swing.GroupLayout(panelPrincipal);
-        panelPrincipal.setLayout(panelPrincipalLayout);
-        panelPrincipalLayout.setHorizontalGroup(
-            panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelPrincipalLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelPrincipalLayout.createSequentialGroup()
-                        .addComponent(panelDatos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(panelInformacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        panelPrincipalLayout.setVerticalGroup(
-            panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelPrincipalLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(panelDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panelInformacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -613,27 +599,27 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelPrincipal, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(panelPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(panelPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(panelPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-    
-    //Modificadores 
-    /**
-     * Seleciona una fila de la tabla mediante su indice
-     * @param indice Indice de la fila
-     */
-    public void setFilaSeleccionada(int indice){
-        if(indice >= 0){
-            tblClicks.changeSelection(indice, 0, false, false);
-        }        
-    }
-    
+
+    //Modificadores     
     public void setJNativeHook(JNativeHook jNativeHook){
         this.jNativeHook = jNativeHook;
     }
@@ -648,6 +634,10 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         return chkMinimizar.isSelected();
     }
     
+    public boolean getAnimar(){
+        return chkAnimar.isSelected();
+    }
+    
     //Acciones   
     private void minimizarMaximixar(){
         if(this.getExtendedState() == JFrame.NORMAL){
@@ -658,6 +648,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }
     
     private boolean guardarArchivo(boolean guardarComo){
+        /*
         boolean guardar;
         String archivo;
         ObjectOutputStream oos;
@@ -718,9 +709,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             }
         }   
         return guardar;
+        */
+        return false;
+        
     }
     
     private void abrirArchivo(){
+        /*
         String archivo;
         ObjectInputStream ois;
         Object aux;
@@ -738,7 +733,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
                     if((aux != null) && (aux instanceof ListaMoveMouse)){
                         listaMoveMouse = (ListaMoveMouse)aux;
-                        llenarTabla();
+                        //llenarTabla();
                         nombreArchivo = archivo;
                         hashCode = listaMoveMouse.hashCodeAlterno();                 
                         this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER") + " - " + this.soloNombreArchivo());
@@ -750,135 +745,133 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 JOptionPane.showMessageDialog(rootPane, java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("EL ARCHIVO NO EXISTE"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¡ERROR!"), JOptionPane.ERROR_MESSAGE);
             }
         }
+        */
     }
     
-    private void prepararTabla(){
-        //Modelado de la tabla
-        tblClicks.setModel(modelo);        
+    private void agregarNodo(Accion accion){
+        DefaultMutableTreeNode nodo;
         
-        tblClicks.getColumnModel().getColumn(0).setPreferredWidth(30); // #
-        tblClicks.getColumnModel().getColumn(0).setMaxWidth(30);
-        tblClicks.getColumnModel().getColumn(0).setMinWidth(30);        
-        tblClicks.getColumnModel().getColumn(1).setPreferredWidth(50); // X
-        tblClicks.getColumnModel().getColumn(1).setMaxWidth(50);
-        tblClicks.getColumnModel().getColumn(1).setMinWidth(50);
-        tblClicks.getColumnModel().getColumn(2).setPreferredWidth(50); // Y
-        tblClicks.getColumnModel().getColumn(2).setMaxWidth(50);
-        tblClicks.getColumnModel().getColumn(2).setMinWidth(50);
-        tblClicks.getColumnModel().getColumn(3).setPreferredWidth(80); // Retardo
-        tblClicks.getColumnModel().getColumn(3).setMaxWidth(80);
-        tblClicks.getColumnModel().getColumn(3).setMinWidth(80);
-        tblClicks.getColumnModel().getColumn(4).setPreferredWidth(65); // Boton
-        tblClicks.getColumnModel().getColumn(4).setMaxWidth(65);
-        tblClicks.getColumnModel().getColumn(4).setMinWidth(65);     
-        tblClicks.getColumnModel().getColumn(5).setPreferredWidth(85); // Pulsación
-        tblClicks.getColumnModel().getColumn(5).setMaxWidth(85);
-        tblClicks.getColumnModel().getColumn(5).setMinWidth(85);  
+        nodo = (DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent();
         
-        tblClicks.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e){
-                int ultimoIndice = tblClicks.getRowCount()-1;
-                tblClicks.changeSelection(ultimoIndice, 0, false, false);
-            }
-        });
         
-        tblClicks.getModel().addTableModelListener(new TableModelListener(){
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                actualizarBotones();
-            }
-        });
-    }
-    
-    private void agregarMoveMouse(){
-        if (listaMoveMouse == null){ //Verifica que la objeto listaMoveMouse exista
-            listaMoveMouse = new ListaMoveMouse(); //Instancia el objeto listaMoveMouse
+        System.out.print("Bucle o condicional: "+((Accion)nodo.getUserObject()).getTipoAccion());
+        
+        switch(((Accion)nodo.getUserObject()).getTipoAccion()){
+            case Accion.BUCLE:
+            case Accion.CONDICIONAL:
+                dtm.insertNodeInto(
+                        new DefaultMutableTreeNode(accion), 
+                        nodo,
+                        dtm.getChildCount(nodo));
+                break;
+            case Accion.ACCIONMOUSE:
+            case Accion.ACCIONESPECIAL:
+                if(((Accion)nodo.getUserObject()).getTipoAccion() == (Accion.BUCLE | Accion.CONDICIONAL)){
+                    dtm.insertNodeInto(
+                            new DefaultMutableTreeNode(accion), 
+                            nodo,
+                            dtm.getChildCount(nodo));
+                }else{
+                    dtm.insertNodeInto(
+                            new DefaultMutableTreeNode(accion), 
+                            (DefaultMutableTreeNode)nodo.getParent(),
+                            dtm.getChildCount((DefaultMutableTreeNode)nodo.getParent()));
+                }
         }
+        treeAcciones.expandPath(treeAcciones.getSelectionPath());
+       
+    }
+    
+    private void agregarAccionMouse(){        
+        Accion accion;
+        AccionMouse accionMouse;
+        accionMouse = new AccionMouse();
+        accion = new Accion();
+        
+        accionMouse.setCoordenada((int)spinX.getValue(), (int)spinY.getValue());
 
-        if(moveMouse == null){ //Verifica que el objeto moveMouse exista
-            moveMouse = new MoveMouse(); //Instancia el objeto moveMouse de ser necesario
-        }            
-
-        moveMouse.setIndice(listaMoveMouse.getCantidadObjetos()+1); //Asigna el indice tomando la cantidad e objetos en la lista
-
-        moveMouse.setCoordenada((int)spinX.getValue(), (int)spinY.getValue());
-
-        moveMouse.setRetardo((int)spinDelay.getValue());
+        accionMouse.setRetardo((int)spinDelay.getValue());
         
         if(cbxBoton.getSelectedIndex() != 0){
             switch(cbxBoton.getSelectedIndex()){ //Asigna el botón
                 case 1:
-                    moveMouse.setBoton(MouseEvent.BUTTON1);
+                    accionMouse.setBoton(MouseEvent.BUTTON1);
                     break;
                 case 2:
                     if(Validador.esWindows()){
-                        moveMouse.setBoton(MouseEvent.BUTTON2);                
+                        accionMouse.setBoton(MouseEvent.BUTTON2);                
                     }else{
-                        moveMouse.setBoton(MouseEvent.BUTTON3);                
+                        accionMouse.setBoton(MouseEvent.BUTTON3);                
                     }
                     break;                
                 case 3:
                     if(Validador.esWindows()){
-                        moveMouse.setBoton(MouseEvent.BUTTON3);                
+                        accionMouse.setBoton(MouseEvent.BUTTON3);                
                     }else{
-                        moveMouse.setBoton(MouseEvent.BUTTON2);                
+                        accionMouse.setBoton(MouseEvent.BUTTON2);                
                     }
             }
             
             switch(cbxPulsacion.getSelectedIndex()){
                 case 0:
-                    moveMouse.setPulsacion(MoveMouse.CLICK_SIMPLE);
+                    accionMouse.setPulsacion(AccionMouse.CLICK_SIMPLE);
                     break;
                 case 1:
-                    moveMouse.setPulsacion(MoveMouse.CLICK_DOBLE);
+                    accionMouse.setPulsacion(AccionMouse.CLICK_DOBLE);
                     break;
                 case 2:
-                    moveMouse.setPulsacion(MoveMouse.CLICK_MANTENER);
+                    accionMouse.setPulsacion(AccionMouse.CLICK_MANTENER);
                     break;
                 case 3:
-                    moveMouse.setPulsacion(MoveMouse.CLICK_SOLTAR);                
+                    accionMouse.setPulsacion(AccionMouse.CLICK_SOLTAR);                
             }
         }else{            
-            moveMouse.setBoton(MouseEvent.NOBUTTON);
-            moveMouse.setPulsacion(MoveMouse.CLICK_NINGUNO);
+            accionMouse.setBoton(MouseEvent.NOBUTTON);
+            accionMouse.setPulsacion(AccionMouse.CLICK_NINGUNO);
         }        
+        
+        accion.setAccionMouse(accionMouse);
 
-        listaMoveMouse.agregar(moveMouse); //Agrega el objeto a la lista
-
-        modelo.addRow(moveMouse.getVector()); //Agrega el click a la tabla
-        actualizarIteraciones(0);
-        moveMouse = null; //Elimina la referencia al objeto insertado en la lista
+        acciones.addAccion(accion); //Agrega el objeto a la lista
+        
+        agregarNodo(accion);
     }
     
-    private void corregirIndiceTabla(){ //Corrige la numeración del campo indice en la tabla
-        for (int i = 0; i < modelo.getRowCount(); i++){
-            modelo.setValueAt(i+1, i, 0);
-        }
-    }
-    
-    private void llenarTabla(){ //Rellena la tabla tomando los valores de la lista
-        while(modelo.getRowCount()>0){
-            modelo.removeRow(modelo.getRowCount()-1);            
+    private void agregarAccionEspecial(){
+        Accion accion;
+        accion = null;
+        
+        switch(cbxAccionEspecial.getSelectedIndex()){
+            case 0:
+                accion = new Accion();
+                accion.setBucle(new Bucle());
+
+                acciones.addAccion(accion); //Agrega el objeto a la lista
+
+                break;
+            case 1:
+                accion = new Accion();
+                accion.setCondicional(new Condicional());
+                
+                acciones.addAccion(accion);
+                
+                break;
         }
         
-        if(listaMoveMouse.getCantidadObjetos() > 0){
-            for(MoveMouse mm : listaMoveMouse.getLista()){
-                modelo.addRow(mm.getVector());
-            }
-        }        
-        spinIteraciones.setValue(listaMoveMouse.getObjeto(0).getIteraciones());
+        if(accion != null){
+            agregarNodo(accion);
+        }
     }
         
     private void actualizarBotones(){
         if(robotMouse != null && ((RobotMouse)robotMouse).estaDetenido()){
-            btnSubir.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 1);
+/*            btnSubir.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 1);
             btnBajar.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 1);        
             btnBorrar.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 0);
             btnPlay.setEnabled(modelo.getRowCount() > 0); 
             spinIteraciones.setEnabled(tblClicks.getRowCount() > 0);
             chkMinimizar.setEnabled(tblClicks.getRowCount() > 0);
-            chkAnimar.setEnabled(tblClicks.getRowCount() > 0);
+            chkAnimar.setEnabled(tblClicks.getRowCount() > 0);*/
         }
     }
     
@@ -893,21 +886,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         return "";
     }
     
-    //Trabajo en progreso
-    private void bucleClicks(){
-        int indiceBucle = listaMoveMouse.getIndiceBucleDisponible();
-        if(tblClicks.getSelectedRowCount() > 0){            
-            for(
-                    int i = tblClicks.getSelectedRows()[0]; 
-                    i <= tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1]; 
-                    i++){
-                modelo.setValueAt(indiceBucle, i, 6);
-                listaMoveMouse.getObjeto(i).setIndiceBucle(indiceBucle);
-            }
-        }
-    }
-    //Trabajo en progreso
-    
     private void activarControles(boolean activar){
         spinX.setEnabled(activar);
         spinY.setEnabled(activar);
@@ -920,23 +898,25 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         btnSubir.setEnabled(activar);
         btnBajar.setEnabled(activar);
         btnBorrar.setEnabled(activar);
-        tblClicks.setEnabled(activar);
+//        tblClicks.setEnabled(activar);
         chkAnimar.setEnabled(activar);
         chkMinimizar.setEnabled(activar);
     }
     
     private void actualizarIteraciones(int indiceBucle){
+        /*
         if(listaMoveMouse.getCantidadObjetos() > 0){
             for(int i = listaMoveMouse.getPosicionInicialBucle(indiceBucle); i <= listaMoveMouse.getPosicionFinalBucle(indiceBucle); i++){
                 listaMoveMouse.getObjeto(i).setIteraciones((int)spinIteraciones.getValue());
             }
         }
+        */
     }
     
     private void subirClicks(){ //Sube un conjunto de click en la tabla y en la lista
         int indicePrimero;
         int indiceUltimo;
-        
+/*        
         if(tblClicks.getSelectedRowCount() > 0){
             indicePrimero = tblClicks.getSelectedRows()[0];
             indiceUltimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];        
@@ -958,13 +938,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 //Actualiza los indices                
                 corregirIndiceTabla();                 
             }
-        }
+        }*/
     }
    
     private void bajarClicks(){ //Baja un conjunto de click en la tabla y en la lista
         int indicePrimero;
         int indiceUltimo;
-        
+/*        
         if(tblClicks.getSelectedRowCount() > 0){
             indicePrimero = tblClicks.getSelectedRows()[0];
             indiceUltimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];    
@@ -986,13 +966,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 //Actualiza los indices                
                 corregirIndiceTabla(); 
             }
-        }
+        }*/
     }
     
     private void borrarClicks(){ //Elimina un conjunto de clicks en la tabla y en la lista
         int primero;
         int ultimo;
-        
+/*        
         primero = tblClicks.getSelectedRows()[0];
         ultimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];        
         
@@ -1007,7 +987,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             
             //Actualiza los indices            
             corregirIndiceTabla();
-        }        
+        }        */
     }
     
     /**
@@ -1030,6 +1010,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
      * <b>Reproduce</b> o <b>detiene</b> las acciones programadas del cursor.
      */
     public void reproducirDetener(){   
+        /*
         if(tblClicks.getRowCount() > 0){
             btnPlay.requestFocus();
             if(robotMouse != null && ((RobotMouse)robotMouse).estaDetenido()){
@@ -1043,12 +1024,12 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 ((RobotMouse)robotMouse).detener();
                 robotMouse = null; 
             }
-        }
+        }*/
     }
     
     private void nuevo(){
         nombreArchivo = "";
-        listaMoveMouse.vaciar();
+        //listaMoveMouse.vaciar();
         spinX.setValue(0);
         spinY.setValue(0);
         spinDelay.setValue(1000);
@@ -1057,14 +1038,17 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         cbxPulsacion.setSelectedIndex(0);
         chkMinimizar.setSelected(false);
         chkAnimar.setSelected(false);
+        /*
         hashCode = listaMoveMouse.hashCodeAlterno();
         while(modelo.getRowCount() > 0){
             modelo.removeRow(modelo.getRowCount()-1);
         }
+        */
         this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER"));
     }
     
     private boolean permitirSalida(){
+        /*
         if (listaMoveMouse.hashCodeAlterno() != hashCode){
             if(JOptionPane.showConfirmDialog(
                     rootPane, 
@@ -1080,7 +1064,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             }
         }else{
             return true;
-        }
+        }*/
         return false;
     }
     
@@ -1122,7 +1106,12 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         
             
     }
-           
+    
+    private void vaciarTreeAcciones(){
+        treeAcciones.setSelectionRow(0);
+        dtm.removeNodeFromParent((DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent());
+            
+    }
     
     //Métodos abstractos de la clase NativeKeyListener
     @Override
@@ -1246,8 +1235,9 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_btnCapturarActionPerformed
 
     private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarActionPerformed
-        agregarMoveMouse();
-        actualizarIteraciones(0);
+        //agregarMoveMouse();
+        this.agregarAccionMouse();
+        //actualizarIteraciones(0);
         //actualizarBotones();        
     }//GEN-LAST:event_btnAgregarActionPerformed
 
@@ -1276,6 +1266,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_itemSalirActionPerformed
 
     private void itemNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemNuevoActionPerformed
+        this.vaciarTreeAcciones();
+        /*
         if (listaMoveMouse.hashCodeAlterno() != hashCode){
             if(JOptionPane.showConfirmDialog(
                     rootPane, 
@@ -1292,6 +1284,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         }else{
             nuevo();
         }
+        */
     }//GEN-LAST:event_itemNuevoActionPerformed
 
     private void spinIteracionesCaretPositionChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_spinIteracionesCaretPositionChanged
@@ -1311,14 +1304,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         cbxPulsacion.setEnabled(cbxBoton.getSelectedIndex() != 0);                
     }//GEN-LAST:event_cbxBotonItemStateChanged
 
-    private void tblClicksMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblClicksMousePressed
-        actualizarBotones();
-    }//GEN-LAST:event_tblClicksMousePressed
-
-    private void tblClicksKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tblClicksKeyPressed
-        actualizarBotones();
-    }//GEN-LAST:event_tblClicksKeyPressed
-
     private void itemGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarActionPerformed
         guardarArchivo(false);
     }//GEN-LAST:event_itemGuardarActionPerformed
@@ -1330,20 +1315,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private void itemGuardarComoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarComoActionPerformed
         guardarArchivo(true);
     }//GEN-LAST:event_itemGuardarComoActionPerformed
-
-    private void tblClicksMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblClicksMouseClicked
-        if (evt.getClickCount() == 2 && !evt.isConsumed()) {
-            evt.consume();            
-            if(tblClicks.getSelectedRow() >= 0){
-                spinX.setValue(tblClicks.getValueAt(tblClicks.getSelectedRow(), 1));
-                spinY.setValue(tblClicks.getValueAt(tblClicks.getSelectedRow(), 2));
-                spinDelay.setValue(tblClicks.getValueAt(tblClicks.getSelectedRow(), 3));
-                cbxBoton.setSelectedItem((String)tblClicks.getValueAt(tblClicks.getSelectedRow(), 4));
-                cbxPulsacion.setSelectedItem((String)tblClicks.getValueAt(tblClicks.getSelectedRow(), 5));
-            }
-        }
-            
-    }//GEN-LAST:event_tblClicksMouseClicked
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         // TODO add your handling code here:
@@ -1372,6 +1343,11 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             }
         }
     }//GEN-LAST:event_itemManualActionPerformed
+
+    private void btnAgregar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregar1ActionPerformed
+        // TODO add your handling code here:
+        this.agregarAccionEspecial();
+    }//GEN-LAST:event_btnAgregar1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1407,11 +1383,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Coordenada;
     private javax.swing.JButton btnAgregar;
+    private javax.swing.JButton btnAgregar1;
     private javax.swing.JButton btnBajar;
     private javax.swing.JButton btnBorrar;
     private javax.swing.JButton btnCapturar;
     private javax.swing.JButton btnPlay;
     private javax.swing.JButton btnSubir;
+    private javax.swing.JComboBox<String> cbxAccionEspecial;
     private javax.swing.JComboBox<String> cbxBoton;
     private javax.swing.JComboBox<String> cbxPulsacion;
     private javax.swing.JCheckBox chkAnimar;
@@ -1429,7 +1407,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel lblBoton;
     private javax.swing.JLabel lblCoordenadas;
@@ -1447,6 +1426,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private javax.swing.JSpinner spinIteraciones;
     private javax.swing.JSpinner spinX;
     private javax.swing.JSpinner spinY;
-    private javax.swing.JTable tblClicks;
+    private javax.swing.JTree treeAcciones;
     // End of variables declaration//GEN-END:variables
 }

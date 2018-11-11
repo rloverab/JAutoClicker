@@ -22,44 +22,33 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 /**
- * Clase <font color=red><b>MoveMouse</b></font>
+ * Clase <font color=red><b>AccionMouse</b></font>
  * Contiene los datos relacionados a las acciones del cursor.
  * @author Roger Lovera
  */
-public class MoveMouse implements Serializable,Comparable<MoveMouse>{
-    private int indice;
+public class AccionMouse{    
+    //Atributos
     private int x;
     private int y;
     private int retardo;
     private int pulsacion;
-    private int boton;
-    private int indiceBucle;
-    private int iteraciones;
+    private int boton;    
     public static final int CLICK_NINGUNO     = 0;
     public static final int CLICK_SIMPLE      = 1;
     public static final int CLICK_DOBLE       = 2;
     public static final int CLICK_MANTENER    = 3;
     public static final int CLICK_SOLTAR      = 4;
     
-  
-    
     //Constructores
-    public MoveMouse(){
+    public AccionMouse(){
         x = 0;
         y = 0;
-        indice = 0;
         pulsacion = 0;
         boton = 0;
-        indiceBucle = 0;
-        iteraciones = 1;
         retardo = 1000;
     }
     
-    //Modificadores
-    public void setIndice (int indice){
-        this.indice = indice;
-    }
-    
+    //Modificadores    
     /**
      * Establece la coordenada donde el cursor debe ubicarse.<br>
      * <b>Notas:</b>
@@ -87,19 +76,7 @@ public class MoveMouse implements Serializable,Comparable<MoveMouse>{
         this.boton = boton;        
     } 
         
-    public void setIndiceBucle(int indiceBucle){
-        this.indiceBucle = indiceBucle;
-    }
-    
-    public void setIteraciones(int iteraciones){
-        this.iteraciones = iteraciones;
-    }
-    
     //Consultas
-    public int getIndice(){
-        return indice;
-    }
-    
     public int getX(){
         return x;
     }
@@ -114,20 +91,15 @@ public class MoveMouse implements Serializable,Comparable<MoveMouse>{
     
     public String getPulsacionTipo(){
         switch(pulsacion){
-            case 0: //return "Ninguno";
-                //return bundle.getString("NINGUNO");
+            case 0: //Ninguno
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("NINGUNO");
-            case 1: //return "Simple";
-                //return bundle.getString("SIMPLE");
+            case 1: //Simple
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("SIMPLE");
-            case 2: //return "Doble";
-                //return bundle.getString("DOBLE");
+            case 2: //Doble
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DOBLE");
-            case 3: //return "Mantener";
-                //return bundle.getString("MANTENER");
+            case 3: //Mantener
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("MANTENER");
-            case 4: //return "Soltar";
-                //return bundle.getString("SOLTAR");
+            case 4: //Soltar
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("SOLTAR");
         }
         return null;        
@@ -135,33 +107,21 @@ public class MoveMouse implements Serializable,Comparable<MoveMouse>{
        
     public String getBotonNombre(){
         switch (boton){            
-            case MouseEvent.BUTTON1: 
-                //return "Izquierdo";
-                //return bundle.getString("IZQUIERDO");
+            case MouseEvent.BUTTON1: //Izquierdo
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("IZQUIERDO");
-            case MouseEvent.BUTTON2:                
-                if(Validador.esWindows()){
-                    //return "Centro";
-                    //return bundle.getString("CENTRO");
+            case MouseEvent.BUTTON2: //Centro o derecho               
+                if(Validador.esWindows()){ //Centro
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("CENTRO");
-                }else{
-                    //return "Derecho";
-                    //return bundle.getString("DERECHO");
+                }else{ //Derecho
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DERECHO");
                 }                
-            case MouseEvent.BUTTON3:                 
-                if(Validador.esWindows()){
-                    //return "Derecho";
-                    //return bundle.getString("DERECHO");
+            case MouseEvent.BUTTON3: //Derecho o centro                
+                if(Validador.esWindows()){ //Derecho
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DERECHO");
-                }else{
-                    //return "Centro";
-                    //return bundle.getString("CENTRO");
+                }else{ //Centro
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("CENTRO");
                 }                 
-            default:
-                //return "Ninguno";
-                //return bundle.getString("NINGUNO");
+            default: //Ninguno
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("NINGUNO");
         }
     }
@@ -170,39 +130,13 @@ public class MoveMouse implements Serializable,Comparable<MoveMouse>{
         return boton;        
     }   
     
-    public int getIndiceBucle(){
-        return indiceBucle;
-    }
-    
-    public int getIteraciones(){
-        return iteraciones;
-    }
-    
     public int getRetardo(){
         return retardo;
     }
-    
-    public Object[] getVector(){
-        return new Object[]{getIndice(),getX(),getY(),getRetardo(),getBotonNombre(),getPulsacionTipo()};
-    }
         
-    //Acciones
-    
+    //Acciones    
     @Override
-    public String toString(){
-        /*
-        return  "Índice:        " + indice + "\n" +
-                "Índice bucle: " + indiceBucle + "\n" +
-                "Coordenadas:   (" + x + "," + y + ")\n" +
-                "Botón:         " + this.getBotonNombre() + "\n" + 
-                "Pulsación:     " + this.getPulsacionTipo() + "\n" +
-                "Retardo:       " + retardo + " ms\n";
-        */
+    public String toString(){        
         return "Click: (" + x + "," + y + ") - " + retardo + "ms. - " + getBotonNombre() + " - " + getPulsacionTipo();
     }    
-    
-    @Override
-    public int compareTo(MoveMouse o) {
-        return Integer.compare(indice, o.indice);                    
-    }
 }
