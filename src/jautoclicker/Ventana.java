@@ -36,6 +36,8 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreePath;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 import org.jnativehook.mouse.NativeMouseEvent;
@@ -56,8 +58,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private ArrayList<Integer> teclasPulsadas;
     private boolean capturarCoordenada;
     private boolean capturarAccion;
-    private JNativeHook jNativeHook;
-    
+    private JNativeHook jNativeHook;    
     private DefaultTreeModel dtm;
     
     //SubClases
@@ -753,9 +754,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         
         nodo = (DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent();
         
-        
-        System.out.print("Bucle o condicional: "+((Accion)nodo.getUserObject()).getTipoAccion());
-        
         switch(((Accion)nodo.getUserObject()).getTipoAccion()){
             case Accion.BUCLE:
             case Accion.CONDICIONAL:
@@ -766,7 +764,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 break;
             case Accion.ACCIONMOUSE:
             case Accion.ACCIONESPECIAL:
-                if(((Accion)nodo.getUserObject()).getTipoAccion() == (Accion.BUCLE | Accion.CONDICIONAL)){
+                if(((Accion)nodo.getUserObject()).getTipoAccion() == Accion.BUCLE || 
+                        ((Accion)nodo.getUserObject()).getTipoAccion() == Accion.CONDICIONAL){
                     dtm.insertNodeInto(
                             new DefaultMutableTreeNode(accion), 
                             nodo,
@@ -913,10 +912,55 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         */
     }
     
-    private void subirClicks(){ //Sube un conjunto de click en la tabla y en la lista
-        int indicePrimero;
+    private void subirClicks(){ //Sube un conjunto de click en la tabla y en la lista        
+        DefaultMutableTreeNode nodoSeleccionado, nodoPadre, aux;
+        Accion accion;
+        int indiceSeleccionado = -1;
+        int filaArbol = -1;
+        boolean expandir = false;
+        
+        TreePath tpo;
+        
+        nodoSeleccionado = (DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent();        
+        filaArbol = treeAcciones.getLeadSelectionRow();        
+        
+        System.out.println("LeadSelectionRow: " + filaArbol);
+        
+        if(nodoSeleccionado != null){
+            if(nodoSeleccionado.getParent() != null){
+                indiceSeleccionado = dtm.getIndexOfChild(nodoSeleccionado.getParent(), nodoSeleccionado);
+                System.out.println("Cantidad de hijos: " + nodoSeleccionado.getParent().getChildCount());  
+                System.out.println("Índice del hijo seleccionado: " + indiceSeleccionado);                
+                
+                if(indiceSeleccionado > 0){
+                    aux = nodoSeleccionado;
+                    nodoPadre = (DefaultMutableTreeNode) nodoSeleccionado.getParent();                    
+                    
+                    dtm.removeNodeFromParent(nodoSeleccionado);
+                    dtm.insertNodeInto(aux, nodoPadre, indiceSeleccionado-1);      
+                    
+                    treeAcciones.setSelectionPath(treeAcciones.getPathForRow(filaArbol - 1));   
+                }                
+            }else{
+                System.out.println("Cantidad de hijos: " + nodoSeleccionado.getChildCount());  
+            }
+        }else{
+            System.out.println("Nodo no seleccionado");
+        }
+        
+            
+        
+            
+        //dmtn.getIndex(dmtn);
+        
+                
+        
+        
+        
+        
+/*      int indicePrimero;
         int indiceUltimo;
-/*        
+        
         if(tblClicks.getSelectedRowCount() > 0){
             indicePrimero = tblClicks.getSelectedRows()[0];
             indiceUltimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];        
@@ -970,9 +1014,16 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }
     
     private void borrarClicks(){ //Elimina un conjunto de clicks en la tabla y en la lista
-        int primero;
+        DefaultMutableTreeNode dmtn;
+        dmtn = (DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent();
+        
+        if(!dmtn.isRoot()){
+            dtm.removeNodeFromParent(dmtn);
+        }
+        
+/*      int primero;
         int ultimo;
-/*        
+        
         primero = tblClicks.getSelectedRows()[0];
         ultimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];        
         
