@@ -27,16 +27,19 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JFrame;
 import javax.swing.JSpinner;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
@@ -60,6 +63,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private boolean capturarAccion;
     private JNativeHook jNativeHook;    
     private DefaultTreeModel dtm;
+    private final int BAJAR = 1;
+    private final int SUBIR = -1;
     
     //SubClases
     class KeySpinner extends KeyAdapter{
@@ -96,8 +101,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         ((JSpinner.DefaultEditor)spinY.getEditor()).getTextField().addKeyListener(new KeySpinner());
         ((JSpinner.DefaultEditor)spinDelay.getEditor()).getTextField().addKeyListener(new KeySpinner());
         
-        //actualizarBotones();  
-        
         acciones = new Acciones();        
         acciones.addAccion(new Accion());
         acciones.getAccion(0).setBucle(new Bucle());
@@ -105,16 +108,42 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode();
         dtm = new DefaultTreeModel(dmtn);
         dmtn.setUserObject(acciones.getAccion(0));
-        treeAcciones.setModel(dtm);
-        treeAcciones.setSelectionInterval(0, 0);
+        jtAcciones.setModel(dtm);
+        jtAcciones.setSelectionInterval(0, 0);        
         
         
-        treeAcciones.addTreeSelectionListener(new TreeSelectionListener(){
+        dtm.addTreeModelListener(new TreeModelListener(){
             @Override
-            public void valueChanged(TreeSelectionEvent e) {
+            public void treeNodesChanged(TreeModelEvent e) {                
                 
             }
+
+            @Override
+            public void treeNodesInserted(TreeModelEvent e) {
+            }
+
+            @Override
+            public void treeNodesRemoved(TreeModelEvent e) {
+            }
+
+            @Override
+            public void treeStructureChanged(TreeModelEvent e) {
+                boolean arbolNoVacio = jtAcciones.getRowCount() > 1;
+                btnPlay.setEnabled(arbolNoVacio); 
+            }
         });
+        
+        jtAcciones.addTreeSelectionListener(new TreeSelectionListener(){
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {                  
+                boolean nodoSeleccionado = jtAcciones.getRowForPath(e.getNewLeadSelectionPath()) > 0;
+                btnSubir.setEnabled(nodoSeleccionado);
+                btnBajar.setEnabled(nodoSeleccionado);
+                btnBorrar.setEnabled(nodoSeleccionado); 
+            }        
+        });
+        
+        actualizarBotones();  
     }
 
     /**
@@ -126,21 +155,21 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        panelPrincipal = new javax.swing.JPanel();
-        panelDatos = new javax.swing.JPanel();
+        panPrincipal = new javax.swing.JPanel();
+        panDatos = new javax.swing.JPanel();
         cbxBoton = new javax.swing.JComboBox<>();
         lblBoton = new javax.swing.JLabel();
         lblPulsacion = new javax.swing.JLabel();
         cbxPulsacion = new javax.swing.JComboBox<>();
-        jLabel3 = new javax.swing.JLabel();
+        lblDelay = new javax.swing.JLabel();
         spinDelay = new javax.swing.JSpinner();
         btnAgregar = new javax.swing.JButton();
-        Coordenada = new javax.swing.JLabel();
+        lblCoordenada = new javax.swing.JLabel();
         btnCapturar = new javax.swing.JButton();
         spinX = new javax.swing.JSpinner();
         spinY = new javax.swing.JSpinner();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
+        lblX = new javax.swing.JLabel();
+        lblY = new javax.swing.JLabel();
         panelInformacion = new javax.swing.JPanel();
         lblF8 = new javax.swing.JLabel();
         lvlF4 = new javax.swing.JLabel();
@@ -156,20 +185,20 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         btnSubir = new javax.swing.JButton();
         spinIteraciones = new javax.swing.JSpinner();
         btnPlay = new javax.swing.JButton();
-        jLabel4 = new javax.swing.JLabel();
+        lblIterations = new javax.swing.JLabel();
         chkAnimar = new javax.swing.JCheckBox();
         chkMinimizar = new javax.swing.JCheckBox();
         jScrollPane2 = new javax.swing.JScrollPane();
-        treeAcciones = new javax.swing.JTree();
+        jtAcciones = new javax.swing.JTree();
         jMenuBar1 = new javax.swing.JMenuBar();
-        menuArchivo = new javax.swing.JMenu();
+        mnuArchivo = new javax.swing.JMenu();
         itemNuevo = new javax.swing.JMenuItem();
         itemAbrir = new javax.swing.JMenuItem();
         itemGuardar = new javax.swing.JMenuItem();
         itemGuardarComo = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         itemSalir = new javax.swing.JMenuItem();
-        menuAyuda = new javax.swing.JMenu();
+        mnuAyuda = new javax.swing.JMenu();
         itemManual = new javax.swing.JMenuItem();
         itemAcercaDe = new javax.swing.JMenuItem();
 
@@ -185,7 +214,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             }
         });
 
-        panelDatos.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("DATOS"))); // NOI18N
+        panDatos.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("DATOS"))); // NOI18N
 
         cbxBoton.setModel(botones);
         cbxBoton.setSelectedItem(0);
@@ -203,7 +232,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         cbxPulsacion.setSelectedItem(0);
         cbxPulsacion.setEnabled(false);
 
-        jLabel3.setText(bundle.getString("RETARDO (MS)")); // NOI18N
+        lblDelay.setText(bundle.getString("RETARDO (MS)")); // NOI18N
 
         spinDelay.setModel(new javax.swing.SpinnerNumberModel(1000, 1, 60000, 1));
 
@@ -214,7 +243,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             }
         });
 
-        Coordenada.setText(bundle.getString("COORDENADAS")); // NOI18N
+        lblCoordenada.setText(bundle.getString("COORDENADAS")); // NOI18N
 
         btnCapturar.setText(bundle.getString("CAPTURAR")); // NOI18N
         btnCapturar.addActionListener(new java.awt.event.ActionListener() {
@@ -227,73 +256,73 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
         spinY.setModel(new javax.swing.SpinnerNumberModel(0, 0, 2000000000, 1));
 
-        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel5.setText("X"); // NOI18N
+        lblX.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblX.setText("X"); // NOI18N
 
-        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel6.setText("Y"); // NOI18N
+        lblY.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        lblY.setText("Y"); // NOI18N
 
-        javax.swing.GroupLayout panelDatosLayout = new javax.swing.GroupLayout(panelDatos);
-        panelDatos.setLayout(panelDatosLayout);
-        panelDatosLayout.setHorizontalGroup(
-            panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelDatosLayout.createSequentialGroup()
+        javax.swing.GroupLayout panDatosLayout = new javax.swing.GroupLayout(panDatos);
+        panDatos.setLayout(panDatosLayout);
+        panDatosLayout.setHorizontalGroup(
+            panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panDatosLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
-                        .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panDatosLayout.createSequentialGroup()
+                        .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(lblBoton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(lblPulsacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(14, 14, 14)
-                        .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(cbxBoton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(cbxPulsacion, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
-                        .addComponent(Coordenada, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panDatosLayout.createSequentialGroup()
+                        .addComponent(lblCoordenada, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(spinX, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(spinY, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
-                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panDatosLayout.createSequentialGroup()
+                        .addComponent(lblDelay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(64, 64, 64)
                         .addComponent(spinDelay, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(panelDatosLayout.createSequentialGroup()
+                    .addGroup(panDatosLayout.createSequentialGroup()
                         .addComponent(btnCapturar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
                         .addComponent(btnAgregar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelDatosLayout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panDatosLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(lblX, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(lblY, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
-        panelDatosLayout.setVerticalGroup(
-            panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelDatosLayout.createSequentialGroup()
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(jLabel6))
+        panDatosLayout.setVerticalGroup(
+            panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panDatosLayout.createSequentialGroup()
+                .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblX)
+                    .addComponent(lblY))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(Coordenada)
+                .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblCoordenada)
                     .addComponent(spinY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(spinX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cbxBoton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(lblBoton))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblPulsacion)
                     .addComponent(cbxPulsacion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
+                .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblDelay)
                     .addComponent(spinDelay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(panelDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(btnCapturar)
                     .addComponent(btnAgregar))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -350,7 +379,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Acción especial"));
 
-        cbxAccionEspecial.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Bucle", "Condicional", "Hotkey: Copiar - Control C", "Hotkey: Cortar - Control X", "Hotkey: Pegar - Control V", "Hotkey: Cerrar - Control F4", "Hotkey: Salir - Alt + F4", "Hotkey: Deshacer - Control Z", "Hotkey: Rehacer - Control Y", "Hotkey: Cambiar ventana - Alt Tab" }));
+        cbxAccionEspecial.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Bucle", "Condicional", "Hotkey: Copiar - Control C", "Hotkey: Cortar - Control X", "Hotkey: Pegar - Control V", "Hotkey: Cerrar - Control F4", "Hotkey: Salir - Alt F4", "Hotkey: Deshacer - Control Z", "Hotkey: Rehacer - Control Y", "Hotkey: Cambiar ventana - Alt Tab" }));
 
         btnAgregar1.setText(bundle.getString("AGREGAR")); // NOI18N
         btnAgregar1.addActionListener(new java.awt.event.ActionListener() {
@@ -379,26 +408,26 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        javax.swing.GroupLayout panelPrincipalLayout = new javax.swing.GroupLayout(panelPrincipal);
-        panelPrincipal.setLayout(panelPrincipalLayout);
-        panelPrincipalLayout.setHorizontalGroup(
-            panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelPrincipalLayout.createSequentialGroup()
+        javax.swing.GroupLayout panPrincipalLayout = new javax.swing.GroupLayout(panPrincipal);
+        panPrincipal.setLayout(panPrincipalLayout);
+        panPrincipalLayout.setHorizontalGroup(
+            panPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panPrincipalLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(panelPrincipalLayout.createSequentialGroup()
-                        .addComponent(panelDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(panPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(panPrincipalLayout.createSequentialGroup()
+                        .addComponent(panDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(panelInformacion, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
-        panelPrincipalLayout.setVerticalGroup(
-            panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelPrincipalLayout.createSequentialGroup()
+        panPrincipalLayout.setVerticalGroup(
+            panPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panPrincipalLayout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(panelPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(panPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(panelInformacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panelDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(panDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -453,13 +482,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             }
         });
 
-        jLabel4.setText(bundle.getString("ITERACIONES")); // NOI18N
+        lblIterations.setText(bundle.getString("ITERACIONES")); // NOI18N
 
         chkAnimar.setText(bundle.getString("ANIMAR")); // NOI18N
 
         chkMinimizar.setText(bundle.getString("MINIMIZAR")); // NOI18N
 
-        jScrollPane2.setViewportView(treeAcciones);
+        jScrollPane2.setViewportView(jtAcciones);
 
         javax.swing.GroupLayout panelOrdenEjecucionLayout = new javax.swing.GroupLayout(panelOrdenEjecucion);
         panelOrdenEjecucion.setLayout(panelOrdenEjecucionLayout);
@@ -474,7 +503,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                             .addComponent(btnBorrar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnBajar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(btnSubir, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(lblIterations, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(spinIteraciones)))
                     .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
                         .addGap(25, 25, 25)
@@ -499,7 +528,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnBorrar)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel4)
+                        .addComponent(lblIterations)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(spinIteraciones, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(13, 13, 13)
@@ -511,8 +540,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        menuArchivo.setMnemonic(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("ARCHIVO").charAt(0));
-        menuArchivo.setText(bundle.getString("ARCHIVO")); // NOI18N
+        mnuArchivo.setMnemonic(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("ARCHIVO").charAt(0));
+        mnuArchivo.setText(bundle.getString("ARCHIVO")); // NOI18N
 
         itemNuevo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_N, java.awt.event.InputEvent.CTRL_MASK));
         itemNuevo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jautoclicker/recursos/document-new.png"))); // NOI18N
@@ -523,7 +552,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 itemNuevoActionPerformed(evt);
             }
         });
-        menuArchivo.add(itemNuevo);
+        mnuArchivo.add(itemNuevo);
 
         itemAbrir.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
         itemAbrir.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jautoclicker/recursos/document-open.png"))); // NOI18N
@@ -534,7 +563,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 itemAbrirActionPerformed(evt);
             }
         });
-        menuArchivo.add(itemAbrir);
+        mnuArchivo.add(itemAbrir);
 
         itemGuardar.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
         itemGuardar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jautoclicker/recursos/document-save.png"))); // NOI18N
@@ -545,7 +574,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 itemGuardarActionPerformed(evt);
             }
         });
-        menuArchivo.add(itemGuardar);
+        mnuArchivo.add(itemGuardar);
 
         itemGuardarComo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
         itemGuardarComo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jautoclicker/recursos/document-save-as.png"))); // NOI18N
@@ -556,8 +585,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 itemGuardarComoActionPerformed(evt);
             }
         });
-        menuArchivo.add(itemGuardarComo);
-        menuArchivo.add(jSeparator1);
+        mnuArchivo.add(itemGuardarComo);
+        mnuArchivo.add(jSeparator1);
 
         itemSalir.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F4, java.awt.event.InputEvent.ALT_MASK));
         itemSalir.setIcon(new javax.swing.ImageIcon(getClass().getResource("/jautoclicker/recursos/stock_exit.png"))); // NOI18N
@@ -568,11 +597,11 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 itemSalirActionPerformed(evt);
             }
         });
-        menuArchivo.add(itemSalir);
+        mnuArchivo.add(itemSalir);
 
-        jMenuBar1.add(menuArchivo);
+        jMenuBar1.add(mnuArchivo);
 
-        menuAyuda.setText(bundle.getString("AYUDA")); // NOI18N
+        mnuAyuda.setText(bundle.getString("AYUDA")); // NOI18N
 
         itemManual.setMnemonic(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("MANUAL").charAt(0));
         itemManual.setText(bundle.getString("MANUAL")); // NOI18N
@@ -581,7 +610,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 itemManualActionPerformed(evt);
             }
         });
-        menuAyuda.add(itemManual);
+        mnuAyuda.add(itemManual);
 
         itemAcercaDe.setMnemonic(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("ACERCA DE JAUTOCLICKER").charAt(0));
         itemAcercaDe.setText(bundle.getString("ACERCA DE JAUTOCLICKER")); // NOI18N
@@ -590,9 +619,9 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 itemAcercaDeActionPerformed(evt);
             }
         });
-        menuAyuda.add(itemAcercaDe);
+        mnuAyuda.add(itemAcercaDe);
 
-        jMenuBar1.add(menuAyuda);
+        jMenuBar1.add(mnuAyuda);
 
         setJMenuBar(jMenuBar1);
 
@@ -602,7 +631,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(panelPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(panPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -611,7 +640,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(panelPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -750,34 +779,51 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }
     
     private void agregarNodo(Accion accion){
-        DefaultMutableTreeNode nodo;
+        DefaultMutableTreeNode nodoSeleccionado, nodoNuevo;
         
-        nodo = (DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent();
+        nodoSeleccionado = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
+        nodoNuevo = null;
+        if(nodoSeleccionado == null){
+            nodoSeleccionado = (DefaultMutableTreeNode)dtm.getRoot();
+        }
         
-        switch(((Accion)nodo.getUserObject()).getTipoAccion()){
+        switch(((Accion)nodoSeleccionado.getUserObject()).getTipoAccion()){
             case Accion.BUCLE:
             case Accion.CONDICIONAL:
+                nodoNuevo = new DefaultMutableTreeNode(accion);
                 dtm.insertNodeInto(
-                        new DefaultMutableTreeNode(accion), 
-                        nodo,
-                        dtm.getChildCount(nodo));
+                        nodoNuevo, 
+                        nodoSeleccionado,
+                        dtm.getChildCount(nodoSeleccionado));
                 break;
             case Accion.ACCIONMOUSE:
             case Accion.ACCIONESPECIAL:
-                if(((Accion)nodo.getUserObject()).getTipoAccion() == Accion.BUCLE || 
-                        ((Accion)nodo.getUserObject()).getTipoAccion() == Accion.CONDICIONAL){
+                nodoNuevo = new DefaultMutableTreeNode(accion);
+                if(((Accion)nodoSeleccionado.getUserObject()).getTipoAccion() == Accion.BUCLE || 
+                        ((Accion)nodoSeleccionado.getUserObject()).getTipoAccion() == Accion.CONDICIONAL){
                     dtm.insertNodeInto(
-                            new DefaultMutableTreeNode(accion), 
-                            nodo,
-                            dtm.getChildCount(nodo));
+                            nodoNuevo, 
+                            nodoSeleccionado,
+                            dtm.getChildCount(nodoSeleccionado));
                 }else{
                     dtm.insertNodeInto(
-                            new DefaultMutableTreeNode(accion), 
-                            (DefaultMutableTreeNode)nodo.getParent(),
-                            dtm.getChildCount((DefaultMutableTreeNode)nodo.getParent()));
+                            nodoNuevo, 
+                            (DefaultMutableTreeNode)nodoSeleccionado.getParent(),
+                            dtm.getChildCount((DefaultMutableTreeNode)nodoSeleccionado.getParent()));
                 }
         }
-        treeAcciones.expandPath(treeAcciones.getSelectionPath());
+        //dtm.reload();
+        jtAcciones.expandPath(jtAcciones.getSelectionPath());
+        if(nodoNuevo != null){            
+            for(int i = 0; i < jtAcciones.getRowCount(); i++){
+                jtAcciones.setSelectionRow(i);
+                if(((DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()).getUserObject().equals(accion)){                    
+                    break;
+                }
+            }
+        }
+        
+        
        
     }
     
@@ -833,7 +879,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
         acciones.addAccion(accion); //Agrega el objeto a la lista
         
-        agregarNodo(accion);
+        agregarNodo(accion);        
     }
     
     private void agregarAccionEspecial(){
@@ -841,29 +887,70 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         accion = null;
         
         switch(cbxAccionEspecial.getSelectedIndex()){
-            case 0:
+            case 0: //Bucle
                 accion = new Accion();
                 accion.setBucle(new Bucle());
 
-                acciones.addAccion(accion); //Agrega el objeto a la lista
-
                 break;
-            case 1:
+            case 1: //Condicional
                 accion = new Accion();
                 accion.setCondicional(new Condicional());
                 
-                acciones.addAccion(accion);
+                break;
+            case 2: //Copiar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.COPIAR));                
                 
                 break;
+            case 3: //Cortar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CORTAR));                
+                
+                break;
+            case 4: //Pegar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.PEGAR));
+                
+                break;
+            case 5: //Cerrar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CERRAR));
+                
+                break;
+            case 6: //Salir
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.SALIR));
+                
+                break;
+            case 7: //Deshacer
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.DESHACER));
+                
+                break;
+            case 8: //Rehacer
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.REHACER));
+                
+                break;
+            case 9: //Cambiar ventana
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CAMBIAR_VENTANA));
         }
         
         if(accion != null){
+            acciones.addAccion(accion);
             agregarNodo(accion);
         }
     }
         
     private void actualizarBotones(){
-        if(robotMouse != null && ((RobotMouse)robotMouse).estaDetenido()){
+        System.out.println("nodoSeleccionado: " + jtAcciones.getLeadSelectionRow());
+        System.out.println("arbolNoVacio: " + jtAcciones.getRowCount());
+        
+        
+        boolean nodoSeleccionado = jtAcciones.getLeadSelectionRow() > 0;
+        boolean arbolNoVacio = jtAcciones.getRowCount() > 1;
+        if(!(robotMouse != null && ((RobotMouse)robotMouse).estaDetenido())){
 /*            btnSubir.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 1);
             btnBajar.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 1);        
             btnBorrar.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 0);
@@ -871,6 +958,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             spinIteraciones.setEnabled(tblClicks.getRowCount() > 0);
             chkMinimizar.setEnabled(tblClicks.getRowCount() > 0);
             chkAnimar.setEnabled(tblClicks.getRowCount() > 0);*/
+            btnSubir.setEnabled(nodoSeleccionado && arbolNoVacio);
+            btnBajar.setEnabled(nodoSeleccionado && arbolNoVacio);
+            btnBorrar.setEnabled(nodoSeleccionado && arbolNoVacio);
+            btnPlay.setEnabled(arbolNoVacio); 
+            spinIteraciones.setEnabled(arbolNoVacio);
+            chkMinimizar.setEnabled(arbolNoVacio);
+            chkAnimar.setEnabled(arbolNoVacio);
         }
     }
     
@@ -912,133 +1006,89 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         */
     }
     
-    private void subirClicks(){ //Sube un conjunto de click en la tabla y en la lista        
+    private void moverClicks(int direccion){        
         DefaultMutableTreeNode nodoSeleccionado, nodoPadre, aux;
-        Accion accion;
-        int indiceSeleccionado = -1;
-        int filaArbol = -1;
-        boolean expandir = false;
+        int indiceSeleccionado;
+        int filaArbol;
+        boolean expandir;
+        int factor;
         
-        TreePath tpo;
+        factor = direccion;            
         
-        nodoSeleccionado = (DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent();        
-        filaArbol = treeAcciones.getLeadSelectionRow();        
+        nodoSeleccionado = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();        
+        filaArbol = jtAcciones.getLeadSelectionRow();  
         
-        System.out.println("LeadSelectionRow: " + filaArbol);
-        
-        if(nodoSeleccionado != null){
-            if(nodoSeleccionado.getParent() != null){
-                indiceSeleccionado = dtm.getIndexOfChild(nodoSeleccionado.getParent(), nodoSeleccionado);
-                System.out.println("Cantidad de hijos: " + nodoSeleccionado.getParent().getChildCount());  
-                System.out.println("Índice del hijo seleccionado: " + indiceSeleccionado);                
+        if(nodoSeleccionado != null){ 
+            if(nodoSeleccionado.getParent() != null){ 
+                indiceSeleccionado = dtm.getIndexOfChild( 
+                        nodoSeleccionado.getParent(), 
+                        nodoSeleccionado);
                 
-                if(indiceSeleccionado > 0){
-                    aux = nodoSeleccionado;
-                    nodoPadre = (DefaultMutableTreeNode) nodoSeleccionado.getParent();                    
+                if((indiceSeleccionado > 0 && direccion == SUBIR) || 
+                        (indiceSeleccionado < nodoSeleccionado.getParent().getChildCount()-1 && direccion == BAJAR)){ //Si se obtuvo el indice del nodo seleccionado
+                    expandir = jtAcciones.isExpanded(filaArbol);
+                    aux = nodoSeleccionado; 
+                    nodoPadre = (DefaultMutableTreeNode) nodoSeleccionado.getParent(); 
                     
-                    dtm.removeNodeFromParent(nodoSeleccionado);
-                    dtm.insertNodeInto(aux, nodoPadre, indiceSeleccionado-1);      
+                    dtm.removeNodeFromParent(nodoSeleccionado); 
+                    dtm.insertNodeInto(aux, nodoPadre, indiceSeleccionado + factor); 
                     
-                    treeAcciones.setSelectionPath(treeAcciones.getPathForRow(filaArbol - 1));   
+                    switch (direccion){
+                        case SUBIR:
+                            for (int i = filaArbol; i > 0; i--){
+                                jtAcciones.setSelectionRow(i);
+                                if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
+                                    if(expandir){
+                                        jtAcciones.expandRow(i);
+                                    }
+                                    break;
+                                }
+                            }
+                            break;
+                        case BAJAR:
+                            for (int i = filaArbol; i < jtAcciones.getRowCount(); i++){
+                                jtAcciones.setSelectionRow(i);
+                                if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
+                                    if(expandir){
+                                        jtAcciones.expandRow(i);
+                                    }
+                                    break;
+                                }
+                            }
+                    }
                 }                
-            }else{
-                System.out.println("Cantidad de hijos: " + nodoSeleccionado.getChildCount());  
             }
-        }else{
-            System.out.println("Nodo no seleccionado");
         }
-        
-            
-        
-            
-        //dmtn.getIndex(dmtn);
-        
-                
-        
-        
-        
-        
-/*      int indicePrimero;
-        int indiceUltimo;
-        
-        if(tblClicks.getSelectedRowCount() > 0){
-            indicePrimero = tblClicks.getSelectedRows()[0];
-            indiceUltimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];        
-            
-            if (indicePrimero > 0) {
-                modelo.moveRow( //Mueve la fila entera un espacio hacia arriba
-                        indicePrimero, 
-                        indiceUltimo, 
-                        indicePrimero-1);
-                
-                listaMoveMouse.subir(indicePrimero, indiceUltimo);
-                
-                setFilaSeleccionada(indicePrimero-1);
-
-                tblClicks.getSelectionModel().setSelectionInterval( //Mantiene el cursor en la fila afectada
-                        indicePrimero-1, 
-                        indiceUltimo-1);
-                
-                //Actualiza los indices                
-                corregirIndiceTabla();                 
-            }
-        }*/
-    }
-   
-    private void bajarClicks(){ //Baja un conjunto de click en la tabla y en la lista
-        int indicePrimero;
-        int indiceUltimo;
-/*        
-        if(tblClicks.getSelectedRowCount() > 0){
-            indicePrimero = tblClicks.getSelectedRows()[0];
-            indiceUltimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];    
-            
-            if (indiceUltimo < tblClicks.getRowCount()-1) {
-                modelo.moveRow( //Mueve la fila entera un espacio hacia abajo
-                        indicePrimero,
-                        indiceUltimo,
-                        indicePrimero+1);
-                
-                listaMoveMouse.bajar(indicePrimero, indiceUltimo);
-                
-                setFilaSeleccionada(indiceUltimo+1);
-                
-                tblClicks.getSelectionModel().setSelectionInterval( //Mantiene el cursor en la fila afectada
-                        indicePrimero+1,
-                        indiceUltimo+1);     
-                
-                //Actualiza los indices                
-                corregirIndiceTabla(); 
-            }
-        }*/
-    }
+    } 
     
-    private void borrarClicks(){ //Elimina un conjunto de clicks en la tabla y en la lista
-        DefaultMutableTreeNode dmtn;
-        dmtn = (DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent();
+    private void borrarClicks(){ 
+        DefaultMutableTreeNode dmtn; //aux;
+        TreeNode aux;
+        int indice;
+        
+        dmtn = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
+        indice = dmtn.getParent().getIndex(dmtn);
+        if(indice > 0){
+            //indice--;
+            aux = (DefaultMutableTreeNode)dmtn.getParent().getChildAt(indice - 1);            
+        }else{
+            if(dmtn.getParent().getChildCount() > 1){
+                aux = (DefaultMutableTreeNode)dmtn.getParent().getChildAt(indice + 1);                
+            }else{
+                aux = (DefaultMutableTreeNode)dmtn.getParent();         
+            }
+        }  
         
         if(!dmtn.isRoot()){
-            dtm.removeNodeFromParent(dmtn);
+            dtm.removeNodeFromParent(dmtn);            
+        } 
+        //dtm.reload();
+        for(int i = 0; i < jtAcciones.getRowCount(); i++){
+            jtAcciones.setSelectionRow(i);
+            if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
+                break;
+            }
         }
-        
-/*      int primero;
-        int ultimo;
-        
-        primero = tblClicks.getSelectedRows()[0];
-        ultimo = tblClicks.getSelectedRows()[tblClicks.getSelectedRowCount()-1];        
-        
-        if(tblClicks.getSelectedRowCount() > 0){ //Verifica que exista filas seleccionadas
-            for(int i = ultimo; i >= primero; i--){ //Elimina las fils selecionadas
-                modelo.removeRow(i);
-                listaMoveMouse.eliminar(i);                
-                if(i - 1 >= 0){
-                    tblClicks.getSelectionModel().setSelectionInterval(i - 1, i - 1);
-                }
-            }   
-            
-            //Actualiza los indices            
-            corregirIndiceTabla();
-        }        */
     }
     
     /**
@@ -1159,8 +1209,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }
     
     private void vaciarTreeAcciones(){
-        treeAcciones.setSelectionRow(0);
-        dtm.removeNodeFromParent((DefaultMutableTreeNode)treeAcciones.getLastSelectedPathComponent());
+        jtAcciones.setSelectionRow(0);
+        dtm.removeNodeFromParent((DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent());
             
     }
     
@@ -1297,11 +1347,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_btnBorrarActionPerformed
 
     private void btnSubirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSubirActionPerformed
-        subirClicks();        
+        //subirClicks();        
+        moverClicks(this.SUBIR);
     }//GEN-LAST:event_btnSubirActionPerformed
 
     private void btnBajarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBajarActionPerformed
-        bajarClicks();
+        //bajarClicks();
+        moverClicks(this.BAJAR);
     }//GEN-LAST:event_btnBajarActionPerformed
 
     private void btnPlayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPlayActionPerformed
@@ -1432,7 +1484,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel Coordenada;
     private javax.swing.JButton btnAgregar;
     private javax.swing.JButton btnAgregar1;
     private javax.swing.JButton btnBajar;
@@ -1453,30 +1504,31 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private javax.swing.JMenuItem itemNuevo;
     private javax.swing.JMenuItem itemSalir;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JTree jtAcciones;
     private javax.swing.JLabel lblBoton;
+    private javax.swing.JLabel lblCoordenada;
     private javax.swing.JLabel lblCoordenadas;
+    private javax.swing.JLabel lblDelay;
     private javax.swing.JLabel lblF8;
+    private javax.swing.JLabel lblIterations;
     private javax.swing.JLabel lblPulsacion;
     private javax.swing.JLabel lblUbicacionActial;
+    private javax.swing.JLabel lblX;
+    private javax.swing.JLabel lblY;
     private javax.swing.JLabel lvlF4;
-    private javax.swing.JMenu menuArchivo;
-    private javax.swing.JMenu menuAyuda;
-    private javax.swing.JPanel panelDatos;
+    private javax.swing.JMenu mnuArchivo;
+    private javax.swing.JMenu mnuAyuda;
+    private javax.swing.JPanel panDatos;
+    private javax.swing.JPanel panPrincipal;
     private javax.swing.JPanel panelInformacion;
     private javax.swing.JPanel panelOrdenEjecucion;
-    private javax.swing.JPanel panelPrincipal;
     private javax.swing.JSpinner spinDelay;
     private javax.swing.JSpinner spinIteraciones;
     private javax.swing.JSpinner spinX;
     private javax.swing.JSpinner spinY;
-    private javax.swing.JTree treeAcciones;
     // End of variables declaration//GEN-END:variables
 }

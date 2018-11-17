@@ -23,41 +23,49 @@ package jautoclicker;
  */
 public class AccionEspecial {
     //Atributos
-    private int atajo;
-    public final int NO_DEFINIDA = 0;
-    public final int COPIAR = 1;
-    public final int PEGAR = 2;
-    public final int MOVER = 3;
-    public final int DESHACER = 4;
-    public final int REHACER = 5;
-    public final int CERRAR = 6;
-    public final int SALIR = 7;
-    public final int CAMBIAR_ENTRE_APLICACIONES = 8;
+    private int accionEspecial;
+    public final static int NO_DEFINIDA = 0;
+    public final static int COPIAR = 1;
+    public final static int CORTAR = 2;
+    public final static int PEGAR = 3;
+    public final static int MOVER = 4;
+    public final static int DESHACER = 5;
+    public final static int REHACER = 6;
+    public final static int CERRAR = 7;
+    public final static int SALIR = 8;
+    public final static int CAMBIAR_VENTANA = 9;
     
     //Constructores
     public AccionEspecial() {
-        atajo = 0;
+        this(NO_DEFINIDA);
+    }
+    
+    public AccionEspecial(int accionEspecial){
+        this.accionEspecial = accionEspecial;
     }
     
     //Modificadores
     /**
-     * Establece el atajo que se desea ejecutar
-     * @param atajo Su valor se puede tomar de las constantes de la clase <b>AccionEspecial</b>
+     * Establece el accionEspecial que se desea ejecutar
+     * @param accionEspecial Su valor se puede tomar de las constantes de la clase <b>AccionEspecial</b>
      */
-    public void setAtajo(int atajo){
-        this.atajo = atajo;
+    public void setAccionEspecial(int accionEspecial){
+        this.accionEspecial = accionEspecial;
     }
     
     //Consulta
     //Acciones
 
     /**
-     * Ejecuta el atajo definido en el objeto.
+     * Ejecuta el accionEspecial definido en el objeto.
      */
     public void ejecutar(){
-        switch (atajo){
+        switch (accionEspecial){
             case COPIAR:
                 Hotkeys.copiar();
+                break;
+            case CORTAR:
+                Hotkeys.cortar();
                 break;
             case PEGAR:
                 Hotkeys.pegar();                
@@ -77,30 +85,30 @@ public class AccionEspecial {
             case SALIR:   
                 Hotkeys.salir();
                 break;
-            case CAMBIAR_ENTRE_APLICACIONES:   
-                Hotkeys.cambiarEntreAplicaciones();                
+            case CAMBIAR_VENTANA:   
+                Hotkeys.cambiarVentana();                
         }
     }
     
     @Override
     public String toString(){
-        switch (atajo){
+        switch (accionEspecial){
             case COPIAR:
-                return "Copiar";
+                return "Copiar - Control C";
+            case CORTAR:
+                return "Cortar - Control X";
             case PEGAR:
-                return "Pegar";
-            case MOVER:
-                return "Mover";
+                return "Pegar - Control V";           
             case DESHACER:
-                return "Deshacer";
+                return "Deshacer - Control Z";
             case REHACER:
-                return "Rehacer";
+                return "Rehacer - Control Y";
             case CERRAR:    
-                return "Cerrar";
+                return "Cerrar - Control F4";
             case SALIR:   
-                return "Salir";
-            case CAMBIAR_ENTRE_APLICACIONES:   
-                return "Cambiar entre aplicaciones";
+                return "Salir - Alt F4";
+            case CAMBIAR_VENTANA:   
+                return "Cambiar ventana - Alt Tab";
             default:
                 return "No definido";
         }

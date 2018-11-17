@@ -205,6 +205,8 @@ public class Accion {
                 return condicional.toString();                
             case ACCIONMOUSE:
                 return accionMouse.toString();
+            case ACCIONESPECIAL:
+                return accionEspecial.toString();
             case NO_DEFINIDA:
                 return "No definida";
         }

@@ -51,6 +51,24 @@ public final class Hotkeys {
             Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    /**
+     * Ejecuta la acción <b>cortar</b> mediante la emulación de un atajo de teclado.
+     * Esta acción afecta al programa cuya ventana tenga el foco en ese instante.<br><br>
+     * <b>Combinación:</b> <i><u>Control</u></i> + <i><u>C</u></i>
+     */
+    public static void cortar(){
+        Robot robot;
+        try {
+            robot = new Robot();
+            robot.keyPress(KeyEvent.VK_CONTROL);
+            robot.keyPress(KeyEvent.VK_X);
+            robot.keyRelease(KeyEvent.VK_CONTROL);
+            robot.keyRelease(KeyEvent.VK_X);
+        } catch (AWTException ex) {
+            Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     /**
      * Ejecuta la acción <b>pegar</b> mediante la emulación de un atajo de teclado.
@@ -165,7 +183,7 @@ public final class Hotkeys {
      * Esta acción afecta al programa cuya ventana tenga el foco en ese instante.<br><br>
      * <b>Combinación:</b> <i><u>Alt</u></i> + <i><u>Tabulador</u></i>
      */
-    public static void cambiarEntreAplicaciones(){
+    public static void cambiarVentana(){
         Robot robot;
         try {
             robot = new Robot();
