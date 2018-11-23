@@ -13,7 +13,7 @@ capturar coordenadas instantáneas y Minimizar/Maximizar la ventana del programa
 ## Descarga
 * 11/11/2018 - [JAutoClicker V1.1](http://stratoplot.com/4n9g)
 
-* Nota: Requiere [Java](https://www.java.com/es/) para su funcionamiento. 
+**Nota:** Requiere [Java](https://www.java.com/es/) para su funcionamiento. 
 
 ## Acerca de el software y el motivo de su desarrollo
 Soy usuario de este tipo de software. He usado muchos y aunque han sido muy útiles no me siento cómodo con ellos. 
