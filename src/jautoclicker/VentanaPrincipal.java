@@ -20,27 +20,37 @@ import java.awt.Desktop;
 import java.awt.Image;
 import java.awt.MouseInfo;
 import java.awt.Toolkit;
-import java.awt.event.KeyAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.ParseException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JSpinner;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
+import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 import org.jnativehook.mouse.NativeMouseEvent;
@@ -50,100 +60,243 @@ import org.jnativehook.mouse.NativeMouseInputListener;
  *
  * @author Roger Lovera
  */
-public class Ventana extends javax.swing.JFrame implements NativeKeyListener, NativeMouseInputListener{
+public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyListener, NativeMouseInputListener{
     //Atributos 
     private String nombreArchivo;
     private Runnable robotMouse;
-    private Acciones acciones;
     private final DefaultComboBoxModel botones;
-    private final DefaultComboBoxModel pulsacion;    
-    private int hashCode;
-    private ArrayList<Integer> teclasPulsadas;
+    private final DefaultComboBoxModel pulsacion;
+    private final DefaultComboBoxModel accionesEspeciales;
+    private final ArrayList<Integer> teclasPulsadas;
     private boolean capturarCoordenada;
-    private boolean capturarAccion;
-    private JNativeHook jNativeHook;    
+    private boolean capturarAccion;    
     private DefaultTreeModel dtm;
+    private DefaultMutableTreeNode nodoBucleActual;
     private final int BAJAR = 1;
     private final int SUBIR = -1;
-    
-    //SubClases
-    class KeySpinner extends KeyAdapter{
-        @Override
-        public void keyTyped(KeyEvent e){
-            if(e.getKeyChar() < '0' || e.getKeyChar() > '9'){
-                e.consume();
-            }
-        }
-    }
     
     /**
      * Creates new form Ventana
      */
      
-    public Ventana() {     
+    public VentanaPrincipal() {             
+        //Atributos        
+        Accion accion;
+        MouseListener listenerMouse;
+        KeyListener keyListenerParaSpinner;
+        TreeSelectionListener treeSelectionListener;
+        FocusListener focusListener;
+        
+        //Instancia de objetos;
         teclasPulsadas = new ArrayList<>();
         nombreArchivo = "";
-        pulsacion = new DefaultComboBoxModel(new String[] { java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("SIMPLE"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("DOBLE"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("MANTENER"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("SOLTAR") });
-        botones = new DefaultComboBoxModel(new String[] { java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("NINGUNO"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("IZQUIERDO"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("CENTRO"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("DERECHO") });
+        pulsacion = new DefaultComboBoxModel(new String[] { 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("SIMPLE"), 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("DOBLE"), 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("MANTENER"), 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("SOLTAR") });
+        botones = new DefaultComboBoxModel(new String[] { 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("NINGUNO"), 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("IZQUIERDO"), 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("CENTRO"), 
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("DERECHO") });
+        accionesEspeciales = new DefaultComboBoxModel(new String [] {
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("BUCLE"), //0: Bucle
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("CONDICIONAL"), //1: Condicional
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("BUCLE CONDICIONADO"), //2: Bucle condicionado
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: COPIAR - CONTROL C"), //3: Hotkey: Copiar - Control C
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: CORTAR - CONTROL X"), //4: Hotkey: Cortar - Control X
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: PEGAR - CONTROL V"), //5: Hotkey: Pegar - Control V
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: DESHACER - CONTROL Z"), //6: Hotkey: Deshacer - Control Z
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: REHACER - CONTROL Y"), //7: Hotkey: Rehacer - Control Y
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: CAMBIAR VENTANA - ALT TAB"), //8: Hotkey: Cambiar ventana - Alt Tab
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: CERRAR - CONTROL F4"), //9: Hotkey: Cerrar - Control F4
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: SALIR - ALT F4"), //10: Hotkey: Salir - Alt F4
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: REFRESCAR - F5"), //11: Hotkey: Refrescar - F5
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ENTRAR - ENTER"), //12: Tecla: Entrar - Enter
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ESCAPAR - ESC"), //13: Tecla: Escapar - Esc
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("INTRODUCIR AL PORTAPAPELES"), //14: Introducir al portapapeles
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("LIMPIAR EL PORTAPAPELES")}); //15: Hotkey Escapar - Esc
         
+        // Generación de ventana
         initComponents(); 
         
+        //Listeners
+        listenerMouse = new MouseListener() {            
+            DefaultMutableTreeNode nodoSeleccionado;
+            TreePath path;
+            Accion accion;
+            
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if(e.getClickCount() == 2){
+                    System.out.println("Doble clic");
+                    nodoSeleccionado = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
+                    accion = ((Accion)nodoSeleccionado.getUserObject());
+                    
+                    if(nodoSeleccionado != null && accion != null){
+                        switch(accion.getTipoAccion()){
+                            case Accion.ACCIONMOUSE:
+                                spinX.setValue(accion.getAccionMouse().getX());
+                                spinY.setValue(accion.getAccionMouse().getY());
+                                cbxBoton.setSelectedItem(accion.getAccionMouse().getBotonNombre());
+                                cbxPulsacion.setSelectedItem(accion.getAccionMouse().getPulsacionTipo());
+                                spinRetardo.setValue(accion.getAccionMouse().getRetardo());
+                                Toolkit.getDefaultToolkit().beep();
+                                break;
+                            case Accion.CONDICIONAL:
+                                path = new TreePath(nodoSeleccionado.getPath());   
+                                if(jtAcciones.isExpanded(path)){
+                                    jtAcciones.collapsePath(path);
+                                }else{
+                                    jtAcciones.expandPath(path);
+                                }
+                                DialogoCondicional dlgCondicional = new DialogoCondicional(getVentanaPrincipal(), true, DialogoCondicional.CONDICIONAL);
+                                dlgCondicional.setLocationRelativeTo(getVentanaPrincipal());
+                                dlgCondicional.setCondicional(accion.getCondicional());
+                                dlgCondicional.setVisible(true);                                                                         
+                                dtm.nodeChanged(nodoSeleccionado);
+                                
+                                break;
+                            case Accion.BUCLE_CONDICIONADO:
+                                path = new TreePath(nodoSeleccionado.getPath());   
+                                if(jtAcciones.isExpanded(path)){
+                                    jtAcciones.collapsePath(path);
+                                }else{
+                                    jtAcciones.expandPath(path);
+                                }
+                                DialogoCondicional dlgBucleCondicionado = new DialogoCondicional(getVentanaPrincipal(), true, DialogoCondicional.BUCLE_CONDICIONADO);
+                                dlgBucleCondicionado.setLocationRelativeTo(getVentanaPrincipal());
+                                dlgBucleCondicionado.setBucleCondicionado(accion.getBucleCondicionado());
+                                dlgBucleCondicionado.setVisible(true);                                                                         
+                                dtm.nodeChanged(nodoSeleccionado);
+                                break;
+                            case Accion.ACCIONESPECIAL:
+                                if(accion.getAccionEspecial().getAccionEspecial() == AccionEspecial.INTRODUCIR_AL_PORTAPAPELES){
+                                    DialogoContenidoPortapapeles dlgContenidoPortapapeles = new DialogoContenidoPortapapeles(getVentanaPrincipal(), true);
+                                    dlgContenidoPortapapeles.setAccionEspecial(accion.getAccionEspecial());
+                                    dlgContenidoPortapapeles.setLocationRelativeTo(getVentanaPrincipal());
+                                    dlgContenidoPortapapeles.setVisible(true);
+                                    dtm.nodeChanged(nodoSeleccionado);
+                                }
+                                
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                //Sin implementar
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                //Sin implementar
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                //Sin implementar
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                //Sin implementar
+            }
+        };
+        keyListenerParaSpinner = new KeyListener(){
+            @Override
+            public void keyTyped(KeyEvent e){
+                if(e.getKeyChar() < '0' || e.getKeyChar() > '9'){
+                    e.consume();
+                }
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                //Sin implementar
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                //Sin implementar
+            }
+        };
+        treeSelectionListener = new TreeSelectionListener(){
+            DefaultMutableTreeNode nodoBucle;
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                nodoBucle = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
+                
+                if(nodoBucle != null){                    
+                    do{                        
+                        if(nodoBucle.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("VERDADERO")) || 
+                                nodoBucle.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("FALSO")) || 
+                                ((Accion)nodoBucle.getUserObject()).getTipoAccion() != Accion.BUCLE){
+                            nodoBucle = (DefaultMutableTreeNode)nodoBucle.getParent();
+                        }                                             
+                    }while(nodoBucle.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("VERDADERO")) || 
+                            nodoBucle.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("FALSO")) ||
+                            ((Accion)nodoBucle.getUserObject()).getTipoAccion() != Accion.BUCLE);
+                  
+                    nodoBucleActual = nodoBucle;
+                    spinIteraciones.setValue(((Accion)nodoBucleActual.getUserObject()).getBucle().getIteraciones());                    
+                }                
+            }
+            
+        };
+        focusListener = new FocusListener(){            
+            @Override
+            public void focusGained(FocusEvent e) {   
+                SwingUtilities.invokeLater(new Runnable(){
+                    @Override
+                    public void run() {
+                        ((JTextField)e.getSource()).selectAll();
+                    }
+                });
+                    
+                
+                        
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                //Sin implementar
+            }            
+        };
+        // Valor iniciar de coordenadas de cursor
         lblCoordenadas.setText("("+
                 MouseInfo.getPointerInfo().getLocation().x+","+
                 MouseInfo.getPointerInfo().getLocation().y+")");
         
+        //Preparando Spinners
         spinX.setEditor(new JSpinner.NumberEditor(spinX, "#"));
         spinY.setEditor(new JSpinner.NumberEditor(spinY, "#"));       
-        
-        //Spinner KeyTyped
-        ((JSpinner.DefaultEditor)spinIteraciones.getEditor()).getTextField().addKeyListener(new KeySpinner());
-        ((JSpinner.DefaultEditor)spinX.getEditor()).getTextField().addKeyListener(new KeySpinner());
-        ((JSpinner.DefaultEditor)spinY.getEditor()).getTextField().addKeyListener(new KeySpinner());
-        ((JSpinner.DefaultEditor)spinDelay.getEditor()).getTextField().addKeyListener(new KeySpinner());
-        
-        acciones = new Acciones();        
-        acciones.addAccion(new Accion());
-        acciones.getAccion(0).setBucle(new Bucle());
-        
+        ((DefaultEditor)spinIteraciones.getEditor()).getTextField().addKeyListener(keyListenerParaSpinner);
+        ((DefaultEditor)spinX.getEditor()).getTextField().addKeyListener(keyListenerParaSpinner);
+        ((DefaultEditor)spinY.getEditor()).getTextField().addKeyListener(keyListenerParaSpinner);
+        ((DefaultEditor)spinRetardo.getEditor()).getTextField().addKeyListener(keyListenerParaSpinner);        
+        ((DefaultEditor)spinIteraciones.getEditor()).getTextField().addFocusListener(focusListener);
+        ((DefaultEditor)spinX.getEditor()).getTextField().addFocusListener(focusListener);
+        ((DefaultEditor)spinY.getEditor()).getTextField().addFocusListener(focusListener);
+        ((DefaultEditor)spinRetardo.getEditor()).getTextField().addFocusListener(focusListener);
+                
+        //Preparación JTree - Lista de acciones
         DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode();
         dtm = new DefaultTreeModel(dmtn);
-        dmtn.setUserObject(acciones.getAccion(0));
+        accion = new Accion();
+        accion.setBucle(new Bucle());
+        dmtn.setUserObject(accion);
         jtAcciones.setModel(dtm);
         jtAcciones.setSelectionInterval(0, 0);        
+        jtAcciones.addTreeSelectionListener(treeSelectionListener);
+        jtAcciones.addMouseListener(listenerMouse);
         
+        actualizarBotones();
         
-        dtm.addTreeModelListener(new TreeModelListener(){
-            @Override
-            public void treeNodesChanged(TreeModelEvent e) {                
-                
-            }
-
-            @Override
-            public void treeNodesInserted(TreeModelEvent e) {
-            }
-
-            @Override
-            public void treeNodesRemoved(TreeModelEvent e) {
-            }
-
-            @Override
-            public void treeStructureChanged(TreeModelEvent e) {
-                boolean arbolNoVacio = jtAcciones.getRowCount() > 1;
-                btnPlay.setEnabled(arbolNoVacio); 
-            }
-        });
-        
-        jtAcciones.addTreeSelectionListener(new TreeSelectionListener(){
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {                  
-                boolean nodoSeleccionado = jtAcciones.getRowForPath(e.getNewLeadSelectionPath()) > 0;
-                btnSubir.setEnabled(nodoSeleccionado);
-                btnBajar.setEnabled(nodoSeleccionado);
-                btnBorrar.setEnabled(nodoSeleccionado); 
-            }        
-        });
-        
-        actualizarBotones();  
+        nodoBucleActual = (DefaultMutableTreeNode)dtm.getRoot();        
     }
 
     /**
@@ -162,7 +315,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         lblPulsacion = new javax.swing.JLabel();
         cbxPulsacion = new javax.swing.JComboBox<>();
         lblDelay = new javax.swing.JLabel();
-        spinDelay = new javax.swing.JSpinner();
+        spinRetardo = new javax.swing.JSpinner();
         btnAgregar = new javax.swing.JButton();
         lblCoordenada = new javax.swing.JLabel();
         btnCapturar = new javax.swing.JButton();
@@ -176,10 +329,10 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         lblUbicacionActial = new javax.swing.JLabel();
         lblCoordenadas = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
+        panAccionEspecial = new javax.swing.JPanel();
         cbxAccionEspecial = new javax.swing.JComboBox<>();
-        btnAgregar1 = new javax.swing.JButton();
-        panelOrdenEjecucion = new javax.swing.JPanel();
+        btnAgregarAccionEspecial = new javax.swing.JButton();
+        panOrdenEjecucion = new javax.swing.JPanel();
         btnBorrar = new javax.swing.JButton();
         btnBajar = new javax.swing.JButton();
         btnSubir = new javax.swing.JButton();
@@ -234,7 +387,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
         lblDelay.setText(bundle.getString("RETARDO (MS)")); // NOI18N
 
-        spinDelay.setModel(new javax.swing.SpinnerNumberModel(1000, 1, 60000, 1));
+        spinRetardo.setModel(new javax.swing.SpinnerNumberModel(1000, 1, 60000, 1));
 
         btnAgregar.setText(bundle.getString("AGREGAR")); // NOI18N
         btnAgregar.addActionListener(new java.awt.event.ActionListener() {
@@ -286,7 +439,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panDatosLayout.createSequentialGroup()
                         .addComponent(lblDelay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGap(64, 64, 64)
-                        .addComponent(spinDelay, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(spinRetardo, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(panDatosLayout.createSequentialGroup()
                         .addComponent(btnCapturar, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
@@ -320,7 +473,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lblDelay)
-                    .addComponent(spinDelay, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(spinRetardo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panDatosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(btnCapturar)
@@ -351,22 +504,20 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             .addGroup(panelInformacionLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(panelInformacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lblCoordenadas, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(panelInformacionLayout.createSequentialGroup()
-                        .addGroup(panelInformacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblUbicacionActial)
-                            .addComponent(lblF8, javax.swing.GroupLayout.PREFERRED_SIZE, 192, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lvlF4)
-                            .addComponent(jLabel1))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                    .addComponent(lblUbicacionActial)
+                    .addComponent(lvlF4)
+                    .addGroup(panelInformacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(lblF8, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(lblCoordenadas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         panelInformacionLayout.setVerticalGroup(
             panelInformacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelInformacionLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(lblUbicacionActial)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(18, 18, 18)
                 .addComponent(lblCoordenadas, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(lvlF4)
@@ -377,34 +528,35 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 .addContainerGap())
         );
 
-        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Acción especial"));
+        panAccionEspecial.setBorder(javax.swing.BorderFactory.createTitledBorder("Acción especial"));
 
-        cbxAccionEspecial.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Bucle", "Condicional", "Hotkey: Copiar - Control C", "Hotkey: Cortar - Control X", "Hotkey: Pegar - Control V", "Hotkey: Cerrar - Control F4", "Hotkey: Salir - Alt F4", "Hotkey: Deshacer - Control Z", "Hotkey: Rehacer - Control Y", "Hotkey: Cambiar ventana - Alt Tab" }));
+        cbxAccionEspecial.setModel(accionesEspeciales);
 
-        btnAgregar1.setText(bundle.getString("AGREGAR")); // NOI18N
-        btnAgregar1.addActionListener(new java.awt.event.ActionListener() {
+        btnAgregarAccionEspecial.setText(bundle.getString("AGREGAR")); // NOI18N
+        btnAgregarAccionEspecial.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAgregar1ActionPerformed(evt);
+                btnAgregarAccionEspecialActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(cbxAccionEspecial, javax.swing.GroupLayout.PREFERRED_SIZE, 330, javax.swing.GroupLayout.PREFERRED_SIZE)
+        javax.swing.GroupLayout panAccionEspecialLayout = new javax.swing.GroupLayout(panAccionEspecial);
+        panAccionEspecial.setLayout(panAccionEspecialLayout);
+        panAccionEspecialLayout.setHorizontalGroup(
+            panAccionEspecialLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panAccionEspecialLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(cbxAccionEspecial, javax.swing.GroupLayout.PREFERRED_SIZE, 318, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnAgregar1, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnAgregarAccionEspecial, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
+        panAccionEspecialLayout.setVerticalGroup(
+            panAccionEspecialLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panAccionEspecialLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(panAccionEspecialLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cbxAccionEspecial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnAgregar1))
+                    .addComponent(btnAgregarAccionEspecial))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -418,8 +570,8 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                     .addGroup(panPrincipalLayout.createSequentialGroup()
                         .addComponent(panDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(panelInformacion, javax.swing.GroupLayout.PREFERRED_SIZE, 208, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(panelInformacion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(panAccionEspecial, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         panPrincipalLayout.setVerticalGroup(
             panPrincipalLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -429,11 +581,11 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                     .addComponent(panelInformacion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(panDatos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panAccionEspecial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
-        panelOrdenEjecucion.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("ÓRDEN DE EJECUCIÓN"))); // NOI18N
+        panOrdenEjecucion.setBorder(javax.swing.BorderFactory.createTitledBorder(bundle.getString("ÓRDEN DE EJECUCIÓN"))); // NOI18N
 
         btnBorrar.setText(bundle.getString("BORRAR")); // NOI18N
         btnBorrar.addActionListener(new java.awt.event.ActionListener() {
@@ -462,18 +614,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 spinIteracionesStateChanged(evt);
             }
         });
-        spinIteraciones.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusLost(java.awt.event.FocusEvent evt) {
-                spinIteracionesFocusLost(evt);
-            }
-        });
-        spinIteraciones.addInputMethodListener(new java.awt.event.InputMethodListener() {
-            public void caretPositionChanged(java.awt.event.InputMethodEvent evt) {
-                spinIteracionesCaretPositionChanged(evt);
-            }
-            public void inputMethodTextChanged(java.awt.event.InputMethodEvent evt) {
-            }
-        });
 
         btnPlay.setText(bundle.getString("REPRODUCIR (F4)")); // NOI18N
         btnPlay.addActionListener(new java.awt.event.ActionListener() {
@@ -490,38 +630,44 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
         jScrollPane2.setViewportView(jtAcciones);
 
-        javax.swing.GroupLayout panelOrdenEjecucionLayout = new javax.swing.GroupLayout(panelOrdenEjecucion);
-        panelOrdenEjecucion.setLayout(panelOrdenEjecucionLayout);
-        panelOrdenEjecucionLayout.setHorizontalGroup(
-            panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 360, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
-                        .addGap(24, 24, 24)
-                        .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnBorrar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnBajar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnSubir, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(lblIterations, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(spinIteraciones)))
-                    .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
-                        .addGap(25, 25, 25)
-                        .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
-                                .addComponent(chkMinimizar)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(chkAnimar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnPlay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap())
-        );
-        panelOrdenEjecucionLayout.setVerticalGroup(
-            panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
+        javax.swing.GroupLayout panOrdenEjecucionLayout = new javax.swing.GroupLayout(panOrdenEjecucion);
+        panOrdenEjecucion.setLayout(panOrdenEjecucionLayout);
+        panOrdenEjecucionLayout.setHorizontalGroup(
+            panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(panelOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 348, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
+                        .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnPlay, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnBajar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnSubir, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnBorrar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addContainerGap())
+                    .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
+                        .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(lblIterations, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
+                                .addGap(1, 1, 1)
+                                .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
+                                        .addComponent(chkMinimizar)
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                    .addComponent(chkAnimar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(11, 11, 11))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panOrdenEjecucionLayout.createSequentialGroup()
+                        .addComponent(spinIteraciones)
+                        .addContainerGap())))
+        );
+        panOrdenEjecucionLayout.setVerticalGroup(
+            panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                    .addGroup(panelOrdenEjecucionLayout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panOrdenEjecucionLayout.createSequentialGroup()
                         .addComponent(btnSubir)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnBajar)
@@ -631,18 +777,20 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(panPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(panPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(panOrdenEjecucion, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(panPrincipal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(panelOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(panOrdenEjecucion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
@@ -650,11 +798,9 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }// </editor-fold>//GEN-END:initComponents
 
     //Modificadores     
-    public void setJNativeHook(JNativeHook jNativeHook){
-        this.jNativeHook = jNativeHook;
-    }
-                
-    //Consultas
+          
+    //Consultas    
+    
     /**
      * Verifica si control <b>JCheckBox "Minimizar"</b> este seleccionado.
      * @return <font color=blue><b>true</b></font> si esta selecionado <br>
@@ -668,6 +814,10 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         return chkAnimar.isSelected();
     }
     
+    private VentanaPrincipal getVentanaPrincipal(){
+        return this;
+    }
+    
     //Acciones   
     private void minimizarMaximixar(){
         if(this.getExtendedState() == JFrame.NORMAL){
@@ -678,9 +828,9 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }
     
     private boolean guardarArchivo(boolean guardarComo){
-        /*
         boolean guardar;
         String archivo;
+        Archivo contenidoArchivo;
         ObjectOutputStream oos;
         JFileChooser selectorArchivo;
         
@@ -724,7 +874,10 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         if(guardar && archivo.length() > 0){
             try {             
                 oos = new ObjectOutputStream(new FileOutputStream(archivo));                                         
-                oos.writeObject(listaMoveMouse);
+                contenidoArchivo = new Archivo(dtm);
+                contenidoArchivo.setAnimar(chkAnimar.isSelected());
+                contenidoArchivo.setMinimizar(chkMinimizar.isSelected());
+                oos.writeObject(contenidoArchivo);
                 oos.close();                
                 JOptionPane.showMessageDialog(
                         rootPane, 
@@ -732,20 +885,15 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                         java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDADO"), 
                         JOptionPane.INFORMATION_MESSAGE);                
                 nombreArchivo = archivo;
-                hashCode = listaMoveMouse.hashCodeAlterno();
                 this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER") + " - " + this.soloNombreArchivo());
             } catch (IOException ex) {
                 System.out.println(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("NO SE PUDE GUARDAR EL ARCHIVO:")+ex);
             }
         }   
         return guardar;
-        */
-        return false;
-        
     }
     
-    private void abrirArchivo(){
-        /*
+    private void abrirArchivo(){        
         String archivo;
         ObjectInputStream ois;
         Object aux;
@@ -760,71 +908,116 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
                 try {  
                     ois = new ObjectInputStream(new FileInputStream(archivo));                    
                     aux = ois.readObject();
-
-                    if((aux != null) && (aux instanceof ListaMoveMouse)){
-                        listaMoveMouse = (ListaMoveMouse)aux;
-                        //llenarTabla();
+                    
+                    if((aux != null) && (aux instanceof Archivo)){
+                        dtm = ((Archivo)aux).getListaAcciones();
+                        jtAcciones.setModel(dtm);
+                        chkAnimar.setEnabled(true);
+                        chkAnimar.setSelected(((Archivo)aux).getAnimar());                        
+                        chkMinimizar.setEnabled(true);
+                        chkMinimizar.setSelected(((Archivo)aux).getMinimizar());
+                        jtAcciones.setSelectionRow(0);
+                        this.actualizarBotones();
+                        this.actualizarControles(false);
                         nombreArchivo = archivo;
-                        hashCode = listaMoveMouse.hashCodeAlterno();                 
                         this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER") + " - " + this.soloNombreArchivo());
                     }
                 } catch (IOException | ClassNotFoundException ex) { 
                     System.out.println(ex);
+                    JOptionPane.showMessageDialog(
+                            rootPane,
+                            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("EL ARCHIVO SELECCIONADO ES INCOMPATIBLE"),
+                            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¡ERROR!"),
+                            JOptionPane.ERROR_MESSAGE);
+                    Logger.getLogger(VentanaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }else{
-                JOptionPane.showMessageDialog(rootPane, java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("EL ARCHIVO NO EXISTE"), java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¡ERROR!"), JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(
+                        rootPane, 
+                        java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("EL ARCHIVO NO EXISTE"), 
+                        java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¡ERROR!"), 
+                        JOptionPane.ERROR_MESSAGE);
             }
-        }
-        */
+        }        
     }
     
     private void agregarNodo(Accion accion){
         DefaultMutableTreeNode nodoSeleccionado, nodoNuevo;
         
         nodoSeleccionado = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
-        nodoNuevo = null;
+        
         if(nodoSeleccionado == null){
             nodoSeleccionado = (DefaultMutableTreeNode)dtm.getRoot();
         }
         
-        switch(((Accion)nodoSeleccionado.getUserObject()).getTipoAccion()){
-            case Accion.BUCLE:
-            case Accion.CONDICIONAL:
-                nodoNuevo = new DefaultMutableTreeNode(accion);
-                dtm.insertNodeInto(
-                        nodoNuevo, 
-                        nodoSeleccionado,
-                        dtm.getChildCount(nodoSeleccionado));
-                break;
-            case Accion.ACCIONMOUSE:
-            case Accion.ACCIONESPECIAL:
-                nodoNuevo = new DefaultMutableTreeNode(accion);
-                if(((Accion)nodoSeleccionado.getUserObject()).getTipoAccion() == Accion.BUCLE || 
-                        ((Accion)nodoSeleccionado.getUserObject()).getTipoAccion() == Accion.CONDICIONAL){
+        nodoNuevo = new DefaultMutableTreeNode(accion);
+        if(accion.getTipoAccion() == Accion.CONDICIONAL){
+            nodoNuevo.add(new DefaultMutableTreeNode(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("VERDADERO")));
+            nodoNuevo.add(new DefaultMutableTreeNode(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("FALSO")));
+        }
+        
+        if(nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("VERDADERO")) || 
+                nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("FALSO"))){
+            dtm.insertNodeInto(
+                    nodoNuevo,
+                    nodoSeleccionado,
+                    dtm.getChildCount(nodoSeleccionado));
+            jtAcciones.expandPath(new TreePath(nodoSeleccionado.getPath()));
+            jtAcciones.setSelectionPath(new TreePath(nodoNuevo.getPath()));
+            
+        }else{
+            switch(((Accion)nodoSeleccionado.getUserObject()).getTipoAccion()){
+                case Accion.BUCLE:                
+                case Accion.BUCLE_CONDICIONADO:
                     dtm.insertNodeInto(
                             nodoNuevo, 
                             nodoSeleccionado,
                             dtm.getChildCount(nodoSeleccionado));
-                }else{
+                    break;
+                case Accion.CONDICIONAL:                                        
+                    dtm.insertNodeInto(
+                            nodoNuevo, 
+                            (DefaultMutableTreeNode)nodoSeleccionado.getChildAt(0),
+                            dtm.getChildCount((DefaultMutableTreeNode)nodoSeleccionado.getChildAt(0)));
+                    jtAcciones.expandPath(new TreePath(((DefaultMutableTreeNode)nodoSeleccionado.getChildAt(0))).getParentPath());
+                    jtAcciones.setSelectionPath(new TreePath(nodoNuevo.getPath()));
+                    break;
+                case Accion.ACCIONMOUSE:
+                case Accion.ACCIONESPECIAL:
                     dtm.insertNodeInto(
                             nodoNuevo, 
                             (DefaultMutableTreeNode)nodoSeleccionado.getParent(),
-                            dtm.getChildCount((DefaultMutableTreeNode)nodoSeleccionado.getParent()));
-                }
-        }
-        //dtm.reload();
-        jtAcciones.expandPath(jtAcciones.getSelectionPath());
-        if(nodoNuevo != null){            
-            for(int i = 0; i < jtAcciones.getRowCount(); i++){
-                jtAcciones.setSelectionRow(i);
-                if(((DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()).getUserObject().equals(accion)){                    
-                    break;
-                }
+                            dtm.getIndexOfChild(nodoSeleccionado.getParent(), nodoSeleccionado)+1);
             }
+            jtAcciones.expandPath(jtAcciones.getSelectionPath());
+
+            //seleccionarNodo(nodoNuevo);                  
         }
         
-        
-       
+        if(accion.getTipoAccion() == Accion.CONDICIONAL){
+            jtAcciones.expandPath(new TreePath(nodoNuevo.getPath()));
+            //jtAcciones.setSelectionPath(new TreePath(((DefaultMutableTreeNode)nodoNuevo.getChildAt(0)).getPath()));
+            seleccionarNodo(((DefaultMutableTreeNode)nodoNuevo.getChildAt(0)));
+            jtAcciones.scrollPathToVisible(new TreePath(((DefaultMutableTreeNode)nodoNuevo.getChildAt(1)).getPath()));
+        }else{
+            seleccionarNodo(nodoNuevo);
+        }
+    }
+    
+    private void expandirTodo(){
+        int filas = jtAcciones.getRowCount();
+        for(int i = 0; i < filas; i++){
+            jtAcciones.expandRow(i);
+            filas = jtAcciones.getRowCount();
+        }
+    }
+    
+    public void seleccionarNodo(DefaultMutableTreeNode nodo){
+        int fila = jtAcciones.getRowForPath(new TreePath(nodo.getPath()));
+        jtAcciones.setSelectionRow(fila);
+        jtAcciones.scrollRowToVisible(fila);
+        jtAcciones.revalidate();
+        jtAcciones.repaint();
     }
     
     private void agregarAccionMouse(){        
@@ -835,7 +1028,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         
         accionMouse.setCoordenada((int)spinX.getValue(), (int)spinY.getValue());
 
-        accionMouse.setRetardo((int)spinDelay.getValue());
+        accionMouse.setRetardo((int)spinRetardo.getValue());
         
         if(cbxBoton.getSelectedIndex() != 0){
             switch(cbxBoton.getSelectedIndex()){ //Asigna el botón
@@ -876,10 +1069,9 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         }        
         
         accion.setAccionMouse(accionMouse);
-
-        acciones.addAccion(accion); //Agrega el objeto a la lista
         
-        agregarNodo(accion);        
+        agregarNodo(accion);      
+        actualizarBotones();
     }
     
     private void agregarAccionEspecial(){
@@ -893,79 +1085,96 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
 
                 break;
             case 1: //Condicional
-                accion = new Accion();
-                accion.setCondicional(new Condicional());
-                
+                DialogoCondicional dlgCondicional = new DialogoCondicional(this, true, DialogoCondicional.CONDICIONAL);
+                dlgCondicional.setLocationRelativeTo(this);
+                dlgCondicional.setVisible(true);
+                if(dlgCondicional.getCondicional() != null){
+                    accion = new Accion();
+                    accion.setCondicional(dlgCondicional.getCondicional());
+                }                
                 break;
-            case 2: //Copiar
-                accion = new Accion();
-                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.COPIAR));                
-                
+            case 2: //Bucle condicionado
+                DialogoCondicional dlgBucleCondicional = new DialogoCondicional(this, true, DialogoCondicional.BUCLE_CONDICIONADO);
+                dlgBucleCondicional.setLocationRelativeTo(this);
+                dlgBucleCondicional.setVisible(true);
+                if(dlgBucleCondicional.getBucleCondicionado() != null){
+                    accion = new Accion();
+                    accion.setBucleCondicionado(dlgBucleCondicional.getBucleCondicionado());
+                }                
                 break;
-            case 3: //Cortar
+            case 3: //Copiar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.COPIAR));                                
+                break;
+            case 4: //Cortar
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CORTAR));                
-                
                 break;
-            case 4: //Pegar
+            case 5: //Pegar
                 accion = new Accion();
-                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.PEGAR));
-                
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.PEGAR));                
                 break;
-            case 5: //Cerrar
-                accion = new Accion();
-                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CERRAR));
-                
-                break;
-            case 6: //Salir
-                accion = new Accion();
-                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.SALIR));
-                
-                break;
-            case 7: //Deshacer
+            case 6: //Deshacer
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.DESHACER));
-                
                 break;
-            case 8: //Rehacer
+            case 7: //Rehacer
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.REHACER));
-                
                 break;
-            case 9: //Cambiar ventana
+            case 8: //Cambiar ventana
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CAMBIAR_VENTANA));
+                break;
+            case 9: //Cerrar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CERRAR));
+                break;
+            case 10: //Salir
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.SALIR));
+                break;
+            case 11: //Refrescar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.REFRESCAR));
+                break;
+            case 12: //Entrar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.ESCAPAR));
+                break;
+            case 13: //Escapar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.ESCAPAR));
+                break;
+            case 14: //
+                DialogoContenidoPortapapeles dlgContenidoPortapapeles =  new DialogoContenidoPortapapeles(this, true);
+                dlgContenidoPortapapeles.setLocationRelativeTo(this);
+                dlgContenidoPortapapeles.setVisible(true);
+                if(dlgContenidoPortapapeles.getAccionEspecial() != null){
+                    accion = new Accion();
+                    accion.setAccionEspecial(dlgContenidoPortapapeles.getAccionEspecial());
+                }
+                break;
+            case 15: //Limpiar el portapapeles
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.LIMPIAR_PORTAPAPELES));
         }
         
         if(accion != null){
-            acciones.addAccion(accion);
             agregarNodo(accion);
         }
     }
         
-    private void actualizarBotones(){
-        System.out.println("nodoSeleccionado: " + jtAcciones.getLeadSelectionRow());
-        System.out.println("arbolNoVacio: " + jtAcciones.getRowCount());
+    private void actualizarBotones(){  
+        boolean arbolNoVacio;
         
+        if((robotMouse != null && !((RobotMouse)robotMouse).estaDetenido())){
+            arbolNoVacio = false;
+        }else{
+            arbolNoVacio = jtAcciones.getRowCount() > 1;
+        }     
         
-        boolean nodoSeleccionado = jtAcciones.getLeadSelectionRow() > 0;
-        boolean arbolNoVacio = jtAcciones.getRowCount() > 1;
-        if(!(robotMouse != null && ((RobotMouse)robotMouse).estaDetenido())){
-/*            btnSubir.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 1);
-            btnBajar.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 1);        
-            btnBorrar.setEnabled(tblClicks.getSelectedRow() >= 0 && modelo.getRowCount() > 0);
-            btnPlay.setEnabled(modelo.getRowCount() > 0); 
-            spinIteraciones.setEnabled(tblClicks.getRowCount() > 0);
-            chkMinimizar.setEnabled(tblClicks.getRowCount() > 0);
-            chkAnimar.setEnabled(tblClicks.getRowCount() > 0);*/
-            btnSubir.setEnabled(nodoSeleccionado && arbolNoVacio);
-            btnBajar.setEnabled(nodoSeleccionado && arbolNoVacio);
-            btnBorrar.setEnabled(nodoSeleccionado && arbolNoVacio);
-            btnPlay.setEnabled(arbolNoVacio); 
-            spinIteraciones.setEnabled(arbolNoVacio);
-            chkMinimizar.setEnabled(arbolNoVacio);
-            chkAnimar.setEnabled(arbolNoVacio);
-        }
+        btnPlay.setEnabled(arbolNoVacio); 
     }
     
     private String soloNombreArchivo(){
@@ -982,28 +1191,28 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private void activarControles(boolean activar){
         spinX.setEnabled(activar);
         spinY.setEnabled(activar);
-        spinDelay.setEnabled(activar);
+        spinRetardo.setEnabled(activar);
         spinIteraciones.setEnabled(activar);
         cbxBoton.setEnabled(activar);        
         cbxPulsacion.setEnabled(activar && cbxBoton.getSelectedIndex() > 0);
         btnCapturar.setEnabled(activar);
         btnAgregar.setEnabled(activar);
+        btnAgregarAccionEspecial.setEnabled(activar);
         btnSubir.setEnabled(activar);
         btnBajar.setEnabled(activar);
         btnBorrar.setEnabled(activar);
-//        tblClicks.setEnabled(activar);
         chkAnimar.setEnabled(activar);
         chkMinimizar.setEnabled(activar);
+        itemNuevo.setEnabled(activar);
+        itemAbrir.setEnabled(activar);
+        itemGuardar.setEnabled(activar);
+        itemGuardarComo.setEnabled(activar);
+        
     }
     
-    private void actualizarIteraciones(int indiceBucle){
-        /*
-        if(listaMoveMouse.getCantidadObjetos() > 0){
-            for(int i = listaMoveMouse.getPosicionInicialBucle(indiceBucle); i <= listaMoveMouse.getPosicionFinalBucle(indiceBucle); i++){
-                listaMoveMouse.getObjeto(i).setIteraciones((int)spinIteraciones.getValue());
-            }
-        }
-        */
+    private void actualizarIteraciones(){
+        ((Accion)nodoBucleActual.getUserObject()).getBucle().setIteraciones((int)spinIteraciones.getValue());                        
+            dtm.nodeChanged(nodoBucleActual);        
     }
     
     private void moverClicks(int direccion){        
@@ -1019,57 +1228,62 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         filaArbol = jtAcciones.getLeadSelectionRow();  
         
         if(nodoSeleccionado != null){ 
-            if(nodoSeleccionado.getParent() != null){ 
-                indiceSeleccionado = dtm.getIndexOfChild( 
-                        nodoSeleccionado.getParent(), 
-                        nodoSeleccionado);
-                
-                if((indiceSeleccionado > 0 && direccion == SUBIR) || 
-                        (indiceSeleccionado < nodoSeleccionado.getParent().getChildCount()-1 && direccion == BAJAR)){ //Si se obtuvo el indice del nodo seleccionado
-                    expandir = jtAcciones.isExpanded(filaArbol);
-                    aux = nodoSeleccionado; 
-                    nodoPadre = (DefaultMutableTreeNode) nodoSeleccionado.getParent(); 
-                    
-                    dtm.removeNodeFromParent(nodoSeleccionado); 
-                    dtm.insertNodeInto(aux, nodoPadre, indiceSeleccionado + factor); 
-                    
-                    switch (direccion){
-                        case SUBIR:
-                            for (int i = filaArbol; i > 0; i--){
-                                jtAcciones.setSelectionRow(i);
-                                if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
-                                    if(expandir){
-                                        jtAcciones.expandRow(i);
+            
+            if(!(nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("VERDADERO")) || 
+                    nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("FALSO")))){
+                if(nodoSeleccionado.getParent() != null){ 
+                    indiceSeleccionado = dtm.getIndexOfChild( 
+                            nodoSeleccionado.getParent(), 
+                            nodoSeleccionado);
+
+                    if((indiceSeleccionado > 0 && direccion == SUBIR) || 
+                            (indiceSeleccionado < nodoSeleccionado.getParent().getChildCount()-1 && direccion == BAJAR)){ //Si se obtuvo el indice del nodo seleccionado
+                        expandir = jtAcciones.isExpanded(filaArbol);
+                        aux = nodoSeleccionado; 
+                        nodoPadre = (DefaultMutableTreeNode) nodoSeleccionado.getParent(); 
+
+                        dtm.removeNodeFromParent(nodoSeleccionado); 
+                        dtm.insertNodeInto(aux, nodoPadre, indiceSeleccionado + factor); 
+
+                        switch (direccion){
+                            case SUBIR:
+                                for (int i = filaArbol; i > 0; i--){
+                                    jtAcciones.setSelectionRow(i);
+                                    this.seleccionarNodo((DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent());
+                                    if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
+                                        if(expandir){
+                                            jtAcciones.expandRow(i);
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
-                            }
-                            break;
-                        case BAJAR:
-                            for (int i = filaArbol; i < jtAcciones.getRowCount(); i++){
-                                jtAcciones.setSelectionRow(i);
-                                if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
-                                    if(expandir){
-                                        jtAcciones.expandRow(i);
+                                break;
+                            case BAJAR:
+                                for (int i = filaArbol; i < jtAcciones.getRowCount(); i++){
+                                    jtAcciones.setSelectionRow(i);
+                                    this.seleccionarNodo((DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent());
+                                    if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
+                                        if(expandir){
+                                            jtAcciones.expandRow(i);
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
-                            }
-                    }
-                }                
-            }
+                        }
+                    }                
+                }
+            }   
         }
     } 
     
     private void borrarClicks(){ 
-        DefaultMutableTreeNode dmtn; //aux;
+        DefaultMutableTreeNode dmtn;
         TreeNode aux;
         int indice;
         
         dmtn = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
         indice = dmtn.getParent().getIndex(dmtn);
         if(indice > 0){
-            //indice--;
             aux = (DefaultMutableTreeNode)dmtn.getParent().getChildAt(indice - 1);            
         }else{
             if(dmtn.getParent().getChildCount() > 1){
@@ -1082,13 +1296,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         if(!dmtn.isRoot()){
             dtm.removeNodeFromParent(dmtn);            
         } 
-        //dtm.reload();
         for(int i = 0; i < jtAcciones.getRowCount(); i++){
             jtAcciones.setSelectionRow(i);
             if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
                 break;
             }
         }
+        actualizarBotones();
     }
     
     /**
@@ -1103,115 +1317,83 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             btnPlay.setText(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("DETENER (F4)"));
         }else{
             btnPlay.setText(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("REPRODUCIR (F4)"));
-        }
-        activarControles(!reproducir);        
+        }        
+        activarControles(!reproducir);         
     }
     
     /**
      * <b>Reproduce</b> o <b>detiene</b> las acciones programadas del cursor.
      */
     public void reproducirDetener(){   
-        /*
-        if(tblClicks.getRowCount() > 0){
+        this.expandirTodo();
+        jtAcciones.setSelectionRow(0);
+        if(jtAcciones.getRowCount() > 1){
             btnPlay.requestFocus();
             if(robotMouse != null && ((RobotMouse)robotMouse).estaDetenido()){
                 robotMouse = null;
             }
             
-            if(robotMouse == null){            
-                robotMouse = new RobotMouse(listaMoveMouse, chkAnimar.isSelected(), this);
+            if(robotMouse == null){
+                robotMouse = new RobotMouse(
+                        (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent(), 
+                        chkAnimar.isSelected(), 
+                        this);
                 new Thread(robotMouse).start();
+                
             }else{                
                 ((RobotMouse)robotMouse).detener();
                 robotMouse = null; 
             }
-        }*/
+        }      
     }
     
     private void nuevo(){
         nombreArchivo = "";
-        //listaMoveMouse.vaciar();
         spinX.setValue(0);
         spinY.setValue(0);
-        spinDelay.setValue(1000);
+        spinRetardo.setValue(1000);
+        this.vaciarTreeAcciones();        
+        
+        ((Accion)nodoBucleActual.getUserObject()).getBucle().setIteraciones(1);
+        
         spinIteraciones.setValue(1);
         cbxBoton.setSelectedIndex(0);
         cbxPulsacion.setSelectedIndex(0);
         chkMinimizar.setSelected(false);
-        chkAnimar.setSelected(false);
-        /*
-        hashCode = listaMoveMouse.hashCodeAlterno();
-        while(modelo.getRowCount() > 0){
-            modelo.removeRow(modelo.getRowCount()-1);
-        }
-        */
+        chkAnimar.setSelected(false);                
         this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER"));
     }
     
     private boolean permitirSalida(){
-        /*
-        if (listaMoveMouse.hashCodeAlterno() != hashCode){
-            if(JOptionPane.showConfirmDialog(
-                    rootPane, 
-                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
-                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
-                    JOptionPane.YES_NO_OPTION, 
-                    JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION){
-                if(guardarArchivo(nombreArchivo.isEmpty())){
-                    return true;
-                }               
-            }else{
+        if(JOptionPane.showConfirmDialog(
+                rootPane, 
+                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
+                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
+                JOptionPane.YES_NO_OPTION, 
+                JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION){
+            if(guardarArchivo(nombreArchivo.isEmpty())){
                 return true;
-            }
+            }               
         }else{
             return true;
-        }*/
+        }        
         return false;
     }
     
-    private void salir(){
-        /*
-        boolean salir;
-        salir = false;
-        
-        if (listaMoveMouse.hashCodeAlterno() != hashCode){
-            if(JOptionPane.showConfirmDialog(
-                    rootPane, 
-                    "¿Desea guardar los cambios primero?", 
-                    "Guardar cambios", 
-                    JOptionPane.YES_NO_OPTION, 
-                    JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION){
-                if(guardarArchivo(nombreArchivo.isEmpty())){
-                    salir = true;
-                }               
-            }else{
-                salir = true;
-            }
-        }else{
-            salir = true;
-        }
-        */
-        if(permitirSalida()){
-            /*
-            try {
-                GlobalScreen.unregisterNativeHook();
-            } catch (NativeHookException ex) {
-                Logger.getLogger(Ventana.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            */
-            jNativeHook.cerrar();
+    private void salir(){        
+        if(permitirSalida()){            
+            JNativeHook.cerrar();
             System.runFinalization();
-            System.exit(0);
-            
+            System.exit(0);   
         }
-        
-            
     }
     
-    private void vaciarTreeAcciones(){
+    private void vaciarTreeAcciones(){     
+        while(jtAcciones.getRowCount() > 1){
+            jtAcciones.setSelectionRow(1);         
+            this.borrarClicks();
+        }
         jtAcciones.setSelectionRow(0);
-        dtm.removeNodeFromParent((DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent());
-            
     }
     
     //Métodos abstractos de la clase NativeKeyListener
@@ -1314,7 +1496,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
             y = 0;
         }
         
-        lblCoordenadas.setText("("+x+","+y+")");
+        lblCoordenadas.setText("(" + x + "," + y + ")");
     }
 
     @Override
@@ -1336,10 +1518,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_btnCapturarActionPerformed
 
     private void btnAgregarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarActionPerformed
-        //agregarMoveMouse();
         this.agregarAccionMouse();
-        //actualizarIteraciones(0);
-        //actualizarBotones();        
     }//GEN-LAST:event_btnAgregarActionPerformed
 
     private void btnBorrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBorrarActionPerformed
@@ -1347,12 +1526,10 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_btnBorrarActionPerformed
 
     private void btnSubirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSubirActionPerformed
-        //subirClicks();        
         moverClicks(this.SUBIR);
     }//GEN-LAST:event_btnSubirActionPerformed
 
     private void btnBajarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBajarActionPerformed
-        //bajarClicks();
         moverClicks(this.BAJAR);
     }//GEN-LAST:event_btnBajarActionPerformed
 
@@ -1361,7 +1538,7 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_btnPlayActionPerformed
 
     private void spinIteracionesStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinIteracionesStateChanged
-        actualizarIteraciones(0);
+        actualizarIteraciones();
     }//GEN-LAST:event_spinIteracionesStateChanged
 
     private void itemSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemSalirActionPerformed
@@ -1369,39 +1546,19 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     }//GEN-LAST:event_itemSalirActionPerformed
 
     private void itemNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemNuevoActionPerformed
-        this.vaciarTreeAcciones();
-        /*
-        if (listaMoveMouse.hashCodeAlterno() != hashCode){
-            if(JOptionPane.showConfirmDialog(
-                    rootPane, 
-                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
-                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
-                    JOptionPane.YES_NO_OPTION, 
-                    JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION){
-                if(guardarArchivo(nombreArchivo.isEmpty())){
-                    nuevo();
-                }               
-            }else{
+        if(JOptionPane.showConfirmDialog(
+                rootPane, 
+                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
+                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
+                JOptionPane.YES_NO_OPTION, 
+                JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION){
+            if(guardarArchivo(nombreArchivo.isEmpty())){
                 nuevo();
-            }
+            }               
         }else{
             nuevo();
-        }
-        */
+        }        
     }//GEN-LAST:event_itemNuevoActionPerformed
-
-    private void spinIteracionesCaretPositionChanged(java.awt.event.InputMethodEvent evt) {//GEN-FIRST:event_spinIteracionesCaretPositionChanged
-        try {
-            spinIteraciones.commitEdit();
-        } catch (ParseException ex) {
-            Logger.getLogger(Ventana.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        this.actualizarIteraciones(0);
-    }//GEN-LAST:event_spinIteracionesCaretPositionChanged
-
-    private void spinIteracionesFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_spinIteracionesFocusLost
-        this.actualizarIteraciones(0);
-    }//GEN-LAST:event_spinIteracionesFocusLost
 
     private void cbxBotonItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cbxBotonItemStateChanged
         cbxPulsacion.setEnabled(cbxBoton.getSelectedIndex() != 0);                
@@ -1436,26 +1593,26 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private void itemManualActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemManualActionPerformed
         if(Desktop.isDesktopSupported()){        
             try {
-                if(!this.getLocale().getLanguage().equals("es")){                 
-                    Desktop.getDesktop().open(new File("Manual_EN.pdf"));                    
+                if(!this.getLocale().getLanguage().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("ES"))){                 
+                    Desktop.getDesktop().open(new File(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("MANUAL_EN.PDF")));                    
                 }else{                    
-                    Desktop.getDesktop().open(new File("Manual_ES.pdf"));
+                    Desktop.getDesktop().open(new File(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("MANUAL_ES.PDF")));
                 }
             } catch (IOException ex) {
-                Logger.getLogger(Ventana.class.getName()).log(Level.SEVERE, null, ex);                
+                Logger.getLogger(VentanaPrincipal.class.getName()).log(Level.SEVERE, null, ex);                
             }
         }
     }//GEN-LAST:event_itemManualActionPerformed
 
-    private void btnAgregar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregar1ActionPerformed
+    private void btnAgregarAccionEspecialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarAccionEspecialActionPerformed
         // TODO add your handling code here:
         this.agregarAccionEspecial();
-    }//GEN-LAST:event_btnAgregar1ActionPerformed
+    }//GEN-LAST:event_btnAgregarAccionEspecialActionPerformed
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
+    public static void main(String args[]) {        
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
@@ -1463,14 +1620,15 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
+                if ("Metal".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
             }
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Ventana.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(VentanaPrincipal.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
         
         //</editor-fold>
@@ -1478,14 +1636,29 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Ventana().setVisible(true);
+                try {
+                    JNativeHook jNativeHook;
+                    jNativeHook = new JNativeHook();
+                    
+                    VentanaPrincipal ventanaPrincipal;                    
+                    ventanaPrincipal = new VentanaPrincipal();
+                    
+                    jNativeHook.addKeyListener(ventanaPrincipal);
+                    jNativeHook.addMouseListener(ventanaPrincipal);
+                    ventanaPrincipal.setLocationRelativeTo(null);
+                    ventanaPrincipal.setAlwaysOnTop(true);
+                    
+                    ventanaPrincipal.setVisible(true);
+                } catch (NativeHookException ex) {                    
+                    Logger.getLogger(VentanaPrincipal.class.getName()).log(Level.SEVERE, null, ex);                    
+                }
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAgregar;
-    private javax.swing.JButton btnAgregar1;
+    private javax.swing.JButton btnAgregarAccionEspecial;
     private javax.swing.JButton btnBajar;
     private javax.swing.JButton btnBorrar;
     private javax.swing.JButton btnCapturar;
@@ -1505,7 +1678,6 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private javax.swing.JMenuItem itemSalir;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JTree jtAcciones;
@@ -1522,12 +1694,13 @@ public class Ventana extends javax.swing.JFrame implements NativeKeyListener, Na
     private javax.swing.JLabel lvlF4;
     private javax.swing.JMenu mnuArchivo;
     private javax.swing.JMenu mnuAyuda;
+    private javax.swing.JPanel panAccionEspecial;
     private javax.swing.JPanel panDatos;
+    private javax.swing.JPanel panOrdenEjecucion;
     private javax.swing.JPanel panPrincipal;
     private javax.swing.JPanel panelInformacion;
-    private javax.swing.JPanel panelOrdenEjecucion;
-    private javax.swing.JSpinner spinDelay;
     private javax.swing.JSpinner spinIteraciones;
+    private javax.swing.JSpinner spinRetardo;
     private javax.swing.JSpinner spinX;
     private javax.swing.JSpinner spinY;
     // End of variables declaration//GEN-END:variables

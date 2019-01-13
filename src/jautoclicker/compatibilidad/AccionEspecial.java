@@ -14,8 +14,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package jautoclicker;
+package jautoclicker.compatibilidad;
 
+import jautoclicker.Hotkeys;
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.Serializable;
 
 /**
@@ -25,11 +30,8 @@ import java.io.Serializable;
  */
 public class AccionEspecial implements Serializable{
     //Atributos
-    private int tipoAccionEspecial;
-    private String contenidoPortapapeles;
-    private Portapapeles portapapeles;
-    
-    //Constantes
+    private int accionEspecial;
+
     /**
      * Tipo de acción especial: 
      * <b>NO_DEFINIDA = 0</b>
@@ -108,45 +110,25 @@ public class AccionEspecial implements Serializable{
      */
     public final static int LIMPIAR_PORTAPAPELES = 12;
     
-    /**
-     * Tipo de acción especial: 
-     * <b>INTRODUCIR_AL_PORTAPAPELES = 13</b>
-     */
-    public final static int INTRODUCIR_AL_PORTAPAPELES = 13;
-    
     //Constructores
     public AccionEspecial() {
         this(NO_DEFINIDA);
     }
     
     public AccionEspecial(int accionEspecial){
-        this.tipoAccionEspecial = accionEspecial;
-        contenidoPortapapeles = "";
-    }
-    
-    public AccionEspecial(String contenidoPortapapeles){
-        tipoAccionEspecial = AccionEspecial.INTRODUCIR_AL_PORTAPAPELES;
-        this.contenidoPortapapeles = contenidoPortapapeles;
+        this.accionEspecial = accionEspecial;
     }
     
     //Modificadores
     /**
      * Establece el accionEspecial que se desea ejecutar
-     * @param tipoAccionEpsecial Su valor se puede tomar de las constantes de la clase <b>AccionEspecial</b>     
+     * @param accionEspecial Su valor se puede tomar de las constantes de la clase <b>AccionEspecial</b>
      */
-    public void setTipoAccionEspecial(int tipoAccionEpsecial){
-        this.tipoAccionEspecial = tipoAccionEpsecial;
-    }
-    
-    public void setContenidoPortapapeles(String contenidoPortapapeles){
-        this.contenidoPortapapeles = contenidoPortapapeles;
+    public void setAccionEspecial(int accionEspecial){
+        this.accionEspecial = accionEspecial;
     }
     
     //Consulta
-    
-    public String getContenidoPortapapeles(){
-        return contenidoPortapapeles;
-    }
 
     /**
      * Devuelve el tipo de acción especial establecido
@@ -166,7 +148,7 @@ public class AccionEspecial implements Serializable{
      * <b>LIMPIAR_PORTAPAPELES = 12</b><br>
      */
     public int getAccionEspecial(){
-        return tipoAccionEspecial;
+        return accionEspecial;
     }
     //Acciones
 
@@ -174,7 +156,7 @@ public class AccionEspecial implements Serializable{
      * Ejecuta el accionEspecial definido en el objeto.
      */
     public void ejecutar(){
-        switch (tipoAccionEspecial){
+        switch (accionEspecial){
             case COPIAR:
                 Hotkeys.copiar();
                 break;
@@ -208,17 +190,29 @@ public class AccionEspecial implements Serializable{
             case ESCAPAR:
                 Hotkeys.escapar();
                 break;
-            case INTRODUCIR_AL_PORTAPAPELES:
-                Portapapeles.setContenido(contenidoPortapapeles);
-                break;
             case LIMPIAR_PORTAPAPELES:
-                Portapapeles.limpiarPortapapeles();
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new Transferable(){
+                    @Override
+                    public DataFlavor[] getTransferDataFlavors() {
+                        return new DataFlavor[0];
+                    }
+
+                    @Override
+                    public boolean isDataFlavorSupported(DataFlavor flavor) {
+                        return false;
+                    }
+
+                    @Override
+                    public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+                        throw new UnsupportedFlavorException(flavor);
+                    }                    
+                }, null);
         }
     }
     
     @Override
     public String toString(){
-        switch (tipoAccionEspecial){
+        switch (accionEspecial){
             case COPIAR:
                 return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: COPIAR - CONTROL C"); // Copiar - Control C
             case CORTAR:
@@ -241,12 +235,6 @@ public class AccionEspecial implements Serializable{
                 return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ENTRAR - ENTER"); // Entrar - ENTER
             case ESCAPAR:
                 return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ESCAPAR - ESC"); // Escapar - ESC
-            case INTRODUCIR_AL_PORTAPAPELES:
-                if(contenidoPortapapeles.trim().length() > 8){
-                    return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("INTRODUCIR AL PORTAPAPELES") + ": \"" + contenidoPortapapeles.trim().substring(0, 5) + "...\""; // Introducir al portapapeles
-                }else{
-                    return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("INTRODUCIR AL PORTAPAPELES") + ": \"" + contenidoPortapapeles.trim() + "\""; // Introducir al portapapeles
-                }
             case LIMPIAR_PORTAPAPELES:
                 return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("LIMPIAR EL PORTAPAPELES");
             default:

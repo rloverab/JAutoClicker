@@ -41,12 +41,12 @@ public final class Hotkeys {
      */
     public static void copiar(){
         Robot robot;
-        try {
+        try {            
             robot = new Robot();
             robot.keyPress(KeyEvent.VK_CONTROL);
             robot.keyPress(KeyEvent.VK_C);
             robot.keyRelease(KeyEvent.VK_CONTROL);
-            robot.keyRelease(KeyEvent.VK_C);
+            robot.keyRelease(KeyEvent.VK_C);            
         } catch (AWTException ex) {
             Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -83,24 +83,6 @@ public final class Hotkeys {
             robot.keyPress(KeyEvent.VK_V);
             robot.keyRelease(KeyEvent.VK_CONTROL);
             robot.keyRelease(KeyEvent.VK_V);
-        } catch (AWTException ex) {
-            Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    /**
-     * Ejecuta la acción <b>mover</b> mediante la emulación de un atajo de teclado.
-     * Esta acción afecta al programa cuya ventana tenga el foco en ese instante.<br><br>
-     * <b>Combinación:</b> <i><u>Control</u></i> + <i><u>X</u></i>
-     */
-    public static void mover(){
-        Robot robot;
-        try {
-            robot = new Robot();
-            robot.keyPress(KeyEvent.VK_CONTROL);
-            robot.keyPress(KeyEvent.VK_X);
-            robot.keyRelease(KeyEvent.VK_CONTROL);
-            robot.keyRelease(KeyEvent.VK_X);
         } catch (AWTException ex) {
             Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -195,4 +177,54 @@ public final class Hotkeys {
             Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    /**
+     * Ejecuta la acción <b>refrescar</b> mediante la emulación de pulsación de la tecla F5.
+     * Esta acción afecta al programa cuya ventana tenga el foco en ese instante.<br><br>
+     * Los programas deben aceptar dicha tecla con esa función asignada. (ej. Navegadores de internet).
+     * <b>Tecla:</b> <i><u>F5</u></i>
+     */
+    public static void refrescar(){
+        try {
+            Robot robot;
+            robot = new Robot();
+            robot.keyPress(KeyEvent.VK_F5);
+            robot.keyRelease(KeyEvent.VK_F5);
+        } catch (AWTException ex) {
+            Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * Ejecuta la acción <b>escapar</b> mediante la emulación de pulsación de la tecla ESC.
+     * Esta acción afecta al programa cuya ventana tenga el foco en ese instante.<br><br>
+     * <b>Combinación:</b> <i><u>ESC</u></i>
+     */
+    public static void escapar(){
+        try {
+            Robot robot;
+            robot = new Robot();
+            robot.keyPress(KeyEvent.VK_ESCAPE);
+            robot.keyRelease(KeyEvent.VK_ESCAPE);
+        } catch (AWTException ex) {
+            Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * Ejecuta la acción <b>entrar</b> mediante la emulación de pulsación de la tecla Enter.
+     * Esta acción afecta al programa cuya ventana tenga el foco en ese instante.<br><br>
+     * <b>Tecla:</b> <i><u>Enter</u></i>
+     */
+    public static void entrar(){
+        try {
+            Robot robot;
+            robot = new Robot();
+            robot.keyPress(KeyEvent.VK_ENTER);
+            robot.keyRelease(KeyEvent.VK_ENTER);
+        } catch (AWTException ex) {
+            Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
 }

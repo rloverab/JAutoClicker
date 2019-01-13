@@ -26,7 +26,7 @@ import java.util.ResourceBundle;
  * Contiene los datos relacionados a las acciones del cursor.
  * @author Roger Lovera
  */
-public class AccionMouse{    
+public class AccionMouse implements Serializable{    
     //Atributos
     private int x;
     private int y;
@@ -137,6 +137,6 @@ public class AccionMouse{
     //Acciones    
     @Override
     public String toString(){        
-        return "Click: (" + x + "," + y + ") - " + retardo + "ms. - " + getBotonNombre() + " - " + getPulsacionTipo();
+        return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("CLIC") + ": (" + x + "," + y + ") - " + retardo + "ms. - " + getBotonNombre() + " - " + getPulsacionTipo();
     }    
 }

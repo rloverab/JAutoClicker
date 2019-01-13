@@ -189,13 +189,16 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="panPrincipal" min="-2" max="-2" attributes="0"/>
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <Component id="panPrincipal" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                  </Group>
+                  <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="panelOrdenEjecucion" min="-2" max="-2" attributes="0"/>
+                      <Component id="panOrdenEjecucion" max="32767" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace max="32767" attributes="0"/>
+              <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -204,7 +207,7 @@
           <Group type="102" alignment="0" attributes="0">
               <Component id="panPrincipal" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="32767" attributes="0"/>
-              <Component id="panelOrdenEjecucion" min="-2" max="-2" attributes="0"/>
+              <Component id="panOrdenEjecucion" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
@@ -222,9 +225,9 @@
                       <Group type="102" attributes="0">
                           <Component id="panDatos" max="32767" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Component id="panelInformacion" min="-2" pref="208" max="-2" attributes="0"/>
+                          <Component id="panelInformacion" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <Component id="jPanel1" max="32767" attributes="0"/>
+                      <Component id="panAccionEspecial" max="32767" attributes="0"/>
                   </Group>
               </Group>
           </Group>
@@ -238,7 +241,7 @@
                       <Component id="panDatos" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                  <Component id="jPanel1" min="-2" max="-2" attributes="0"/>
+                  <Component id="panAccionEspecial" min="-2" max="-2" attributes="0"/>
                   <EmptySpace min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
@@ -283,7 +286,7 @@
                           <Group type="102" alignment="1" attributes="0">
                               <Component id="lblDelay" max="32767" attributes="0"/>
                               <EmptySpace min="-2" pref="64" max="-2" attributes="0"/>
-                              <Component id="spinDelay" min="-2" pref="90" max="-2" attributes="0"/>
+                              <Component id="spinRetardo" min="-2" pref="90" max="-2" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
                               <Component id="btnCapturar" min="-2" pref="120" max="-2" attributes="0"/>
@@ -327,7 +330,7 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="lblDelay" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="spinDelay" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="spinRetardo" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" attributes="0">
@@ -392,7 +395,7 @@
                 </Property>
               </Properties>
             </Component>
-            <Component class="javax.swing.JSpinner" name="spinDelay">
+            <Component class="javax.swing.JSpinner" name="spinRetardo">
               <Properties>
                 <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.editors2.SpinnerModelEditor">
                   <SpinnerModel initial="1000" maximum="60000" minimum="1" numberType="java.lang.Integer" stepSize="1" type="number"/>
@@ -468,21 +471,18 @@
           <Layout>
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Group type="102" alignment="0" attributes="0">
+                  <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="lblCoordenadas" max="32767" attributes="0"/>
-                          <Group type="102" attributes="0">
-                              <Group type="103" groupAlignment="0" attributes="0">
-                                  <Component id="lblUbicacionActial" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="lblF8" alignment="0" min="-2" pref="192" max="-2" attributes="0"/>
-                                  <Component id="lvlF4" alignment="0" min="-2" max="-2" attributes="0"/>
-                                  <Component id="jLabel1" alignment="0" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          <Component id="lblUbicacionActial" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="lvlF4" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                              <Component id="lblF8" alignment="0" max="32767" attributes="0"/>
+                              <Component id="jLabel1" alignment="0" max="32767" attributes="0"/>
                           </Group>
+                          <Component id="lblCoordenadas" alignment="0" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -491,7 +491,7 @@
                   <Group type="102" alignment="1" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="lblUbicacionActial" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <EmptySpace type="separate" max="-2" attributes="0"/>
                       <Component id="lblCoordenadas" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
                       <Component id="lvlF4" min="-2" max="-2" attributes="0"/>
@@ -552,7 +552,7 @@
             </Component>
           </SubComponents>
         </Container>
-        <Container class="javax.swing.JPanel" name="jPanel1">
+        <Container class="javax.swing.JPanel" name="panAccionEspecial">
           <Properties>
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
@@ -565,9 +565,10 @@
             <DimensionLayout dim="0">
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" alignment="0" attributes="0">
-                      <Component id="cbxAccionEspecial" min="-2" pref="330" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="cbxAccionEspecial" min="-2" pref="318" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
-                      <Component id="btnAgregar1" min="-2" pref="120" max="-2" attributes="0"/>
+                      <Component id="btnAgregarAccionEspecial" min="-2" pref="125" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -578,7 +579,7 @@
                       <EmptySpace min="-2" max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="cbxAccionEspecial" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="btnAgregar1" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="btnAgregarAccionEspecial" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="32767" attributes="0"/>
                   </Group>
@@ -588,40 +589,29 @@
           <SubComponents>
             <Component class="javax.swing.JComboBox" name="cbxAccionEspecial">
               <Properties>
-                <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                  <StringArray count="10">
-                    <StringItem index="0" value="Bucle"/>
-                    <StringItem index="1" value="Condicional"/>
-                    <StringItem index="2" value="Hotkey: Copiar - Control C"/>
-                    <StringItem index="3" value="Hotkey: Cortar - Control X"/>
-                    <StringItem index="4" value="Hotkey: Pegar - Control V"/>
-                    <StringItem index="5" value="Hotkey: Cerrar - Control F4"/>
-                    <StringItem index="6" value="Hotkey: Salir - Alt F4"/>
-                    <StringItem index="7" value="Hotkey: Deshacer - Control Z"/>
-                    <StringItem index="8" value="Hotkey: Rehacer - Control Y"/>
-                    <StringItem index="9" value="Hotkey: Cambiar ventana - Alt Tab"/>
-                  </StringArray>
+                <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="accionesEspeciales" type="code"/>
                 </Property>
               </Properties>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
               </AuxValues>
             </Component>
-            <Component class="javax.swing.JButton" name="btnAgregar1">
+            <Component class="javax.swing.JButton" name="btnAgregarAccionEspecial">
               <Properties>
                 <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
                   <ResourceString bundle="jautoclicker/Bundle.properties" key="AGREGAR" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
                 </Property>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAgregar1ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAgregarAccionEspecialActionPerformed"/>
               </Events>
             </Component>
           </SubComponents>
         </Container>
       </SubComponents>
     </Container>
-    <Container class="javax.swing.JPanel" name="panelOrdenEjecucion">
+    <Container class="javax.swing.JPanel" name="panOrdenEjecucion">
       <Properties>
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
@@ -635,32 +625,41 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" alignment="0" attributes="0">
-                  <Component id="jScrollPane2" min="-2" pref="360" max="-2" attributes="0"/>
+              <Group type="102" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
+                  <Component id="jScrollPane2" min="-2" pref="348" max="-2" attributes="0"/>
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace min="-2" pref="24" max="-2" attributes="0"/>
+                      <Group type="102" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="btnBorrar" alignment="0" max="32767" attributes="0"/>
-                              <Component id="btnBajar" alignment="0" max="32767" attributes="0"/>
-                              <Component id="btnSubir" alignment="0" max="32767" attributes="0"/>
-                              <Component id="lblIterations" max="32767" attributes="0"/>
-                              <Component id="spinIteraciones" alignment="0" max="32767" attributes="0"/>
+                              <Component id="btnPlay" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
+                              <Component id="btnBajar" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
+                              <Component id="btnSubir" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
+                              <Component id="btnBorrar" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
                           </Group>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace min="-2" pref="25" max="-2" attributes="0"/>
+                      <Group type="102" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" attributes="0">
-                                  <Component id="chkMinimizar" min="-2" max="-2" attributes="0"/>
-                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                              <Component id="lblIterations" max="32767" attributes="0"/>
+                              <Group type="102" alignment="0" attributes="0">
+                                  <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Component id="chkMinimizar" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                      </Group>
+                                      <Component id="chkAnimar" max="32767" attributes="0"/>
+                                  </Group>
                               </Group>
-                              <Component id="chkAnimar" max="32767" attributes="0"/>
-                              <Component id="btnPlay" alignment="0" max="32767" attributes="0"/>
                           </Group>
+                          <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="1" attributes="0">
+                          <Component id="spinIteraciones" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -670,7 +669,7 @@
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" max="-2" attributes="0">
                       <Component id="jScrollPane2" pref="0" max="32767" attributes="0"/>
-                      <Group type="102" attributes="0">
+                      <Group type="102" alignment="1" attributes="0">
                           <Component id="btnSubir" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="btnBajar" min="-2" max="-2" attributes="0"/>
@@ -732,8 +731,6 @@
           </Properties>
           <Events>
             <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="spinIteracionesStateChanged"/>
-            <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="spinIteracionesFocusLost"/>
-            <EventHandler event="caretPositionChanged" listener="java.awt.event.InputMethodListener" parameters="java.awt.event.InputMethodEvent" handler="spinIteracionesCaretPositionChanged"/>
           </Events>
         </Component>
         <Component class="javax.swing.JButton" name="btnPlay">

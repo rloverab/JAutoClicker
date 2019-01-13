@@ -16,26 +16,29 @@
  */
 package jautoclicker;
 
+import javax.swing.JTextField;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.PlainDocument;
+
 /**
  *
  * @author Roger Lovera
  */
-public final class Validador {
-    //Acciones
-    public static boolean esNumero(String cadena){
-        if(cadena != null && !cadena.trim().isEmpty()){
-            try{
-                Integer.parseInt(cadena);
-                return true;
-            }catch(NumberFormatException e){
-                return false;
-            }
-        }else{
-            return false;
-        }
+public class LimiteCaracteres extends PlainDocument{
+    public JTextField editor;
+    public int maximoCaracteres;
+
+    public LimiteCaracteres(JTextField editor, int maximoCaracteres) {
+        this.editor = editor;
+        this.maximoCaracteres = maximoCaracteres;
     }
     
-    public static boolean esWindows(){        
-        return System.getProperties().getProperty("os.name").toLowerCase().contains("win");
+    @Override
+    public void insertString(int arg0, String arg1, AttributeSet arg2) throws BadLocationException 
+    { 
+        if ((editor.getText().length()+arg1.length())>this.maximoCaracteres) 
+            return; 
+        super.insertString(arg0, arg1, arg2); 
     }
 }

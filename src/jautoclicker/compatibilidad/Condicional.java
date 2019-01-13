@@ -14,9 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package jautoclicker;
+package jautoclicker.compatibilidad;
 
+import jautoclicker.Validador;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Clase <font color=blue><b>Condicional</b></font>
@@ -177,6 +186,28 @@ public class Condicional implements Serializable{
     }
     
     //Consultas
+    private String getDato(){
+        String resultado;
+        Clipboard cb;
+        Transferable t;
+        Boolean esTransferible;
+        
+        resultado = "";        
+        cb = Toolkit.getDefaultToolkit().getSystemClipboard();     
+        
+        t = cb.getContents(this);
+        esTransferible = (t != null) && t.isDataFlavorSupported(DataFlavor.stringFlavor);
+        
+        if(esTransferible){
+            try{
+                resultado = t.getTransferData(DataFlavor.stringFlavor).toString();
+            } catch (UnsupportedFlavorException | IOException ex) {
+                Logger.getLogger(Condicional.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }        
+        return resultado;
+    }
+
     public String getPatronMinimo() {
         return patronMinimo;
     }
@@ -203,13 +234,13 @@ public class Condicional implements Serializable{
         
     //Acciones
     public boolean seCumple(){  
-        return seCumple(Portapapeles.getContenido());
+        return seCumple(this.getDato());
     }
     
     public boolean seCumple(String portapapeles){  
         Boolean resultado;
         
-        if(portapapeles != null && !portapapeles.isEmpty()){
+        if(!portapapeles.isEmpty()){
             switch (tipoDato){
                 case TEXTO:
                     if(textoExacto){                        

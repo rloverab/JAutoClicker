@@ -22,6 +22,7 @@ import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import javax.swing.JFrame;
+import javax.swing.tree.DefaultMutableTreeNode;
 import org.jnativehook.GlobalScreen;
 
 /**
@@ -31,26 +32,27 @@ import org.jnativehook.GlobalScreen;
 public class RobotMouse implements Runnable{  
     //Atributos
     private Robot robot;
-    private ListaMoveMouse listaMoveMouse;
-    private Ventana ventana;
+    private DefaultMutableTreeNode listaAcciones;
+    private VentanaPrincipal ventana;
     private boolean animar;
     private boolean detener;
+    private Long instanteCambioPortapapeles;
     
     //Constructores    
-    public RobotMouse(){        
-        listaMoveMouse = null;
+    public RobotMouse(){     
         ventana = null;
         animar = false;
         detener = false;
     }
     
-    public RobotMouse(ListaMoveMouse listaMoveMouse, boolean animar, Ventana ventana){
+    public RobotMouse(DefaultMutableTreeNode listaAcciones, boolean animar, VentanaPrincipal ventana){
         try {
             robot = new Robot();
-            this.listaMoveMouse = listaMoveMouse;
+            this.listaAcciones = listaAcciones;
             this.animar = animar;
             this.ventana = ventana;
-            detener = false;
+            detener = false; 
+            instanteCambioPortapapeles = 0l;
         } catch (AWTException ex) {
             System.out.println(ex);
         }
@@ -61,11 +63,10 @@ public class RobotMouse implements Runnable{
     /**
      * Define una referencia a la lista de acciones programadas del cursor que 
      * se va a reproducir
-     * @param listaMoveMouse Objeto ListaMoveMouse que contiene las acciones 
-     * programadas del cursor
-     */
-    public void setListaMoveMouse(ListaMoveMouse listaMoveMouse){
-        this.listaMoveMouse = listaMoveMouse;
+     * @param ListaAcciones Objeto de tipo DefaultMutableTreeNode
+     */    
+    public void setListaAcciones(DefaultMutableTreeNode ListaAcciones){
+        this.listaAcciones = ListaAcciones;        
     }
     
     /**
@@ -84,7 +85,7 @@ public class RobotMouse implements Runnable{
      * objeto Ventana.
      * @param ventana Objeto de tipo Ventana
      */
-    public void setVentana(Ventana ventana){        
+    public void setVentana(VentanaPrincipal ventana){        
         this.ventana = ventana;
     }
     //Consultas    
@@ -101,38 +102,38 @@ public class RobotMouse implements Runnable{
 
     
     //Acciones
-    private void accionMouse(MoveMouse moveMouse){                
-        robot.mouseMove(moveMouse.getX(), moveMouse.getY());     
+    private void accionMouse(AccionMouse accionMouse){                
+        robot.mouseMove(accionMouse.getX(), accionMouse.getY());     
             
-        if(moveMouse.getBoton() != MouseEvent.NOBUTTON){
-            switch(moveMouse.getPulsacion()){
-                case MoveMouse.CLICK_SIMPLE:
-                    robot.mousePress(InputEvent.getMaskForButton(moveMouse.getBoton()));
-                    robot.mouseRelease(InputEvent.getMaskForButton(moveMouse.getBoton()));
+        if(accionMouse.getBoton() != MouseEvent.NOBUTTON){
+            switch(accionMouse.getPulsacion()){
+                case AccionMouse.CLICK_SIMPLE:
+                    robot.mousePress(InputEvent.getMaskForButton(accionMouse.getBoton()));
+                    robot.mouseRelease(InputEvent.getMaskForButton(accionMouse.getBoton()));
                     break;
-                case MoveMouse.CLICK_DOBLE:
+                case AccionMouse.CLICK_DOBLE:
                     for (int i = 1; i <= 2; i++){
-                        robot.mousePress(InputEvent.getMaskForButton(moveMouse.getBoton()));
-                        robot.mouseRelease(InputEvent.getMaskForButton(moveMouse.getBoton()));
-                        robot.delay(GlobalScreen.getMultiClickIterval());
+                        robot.mousePress(InputEvent.getMaskForButton(accionMouse.getBoton()));
+                        robot.mouseRelease(InputEvent.getMaskForButton(accionMouse.getBoton()));
+                        robot.delay(GlobalScreen.getMultiClickIterval() - (GlobalScreen.getMultiClickIterval()/10));
                     }
                     break;
-                case MoveMouse.CLICK_MANTENER:
-                    robot.mousePress(InputEvent.getMaskForButton(moveMouse.getBoton()));                    
+                case AccionMouse.CLICK_MANTENER:
+                    robot.mousePress(InputEvent.getMaskForButton(accionMouse.getBoton()));                    
                     break;
-                case MoveMouse.CLICK_SOLTAR:                    
-                    robot.mouseRelease(InputEvent.getMaskForButton(moveMouse.getBoton()));                    
+                case AccionMouse.CLICK_SOLTAR:                    
+                    robot.mouseRelease(InputEvent.getMaskForButton(accionMouse.getBoton()));                    
             }
         }
-    }
+    } 
     
     private void retardo(int retardo){  
-        for(int i = 0; i < retardo; i++){
-            if(detener){
+        long fin = System.currentTimeMillis() + (long)retardo;
+        while (System.currentTimeMillis() <= fin){
+            if(detener){ //Para interrumpir el hilo          
                 break;
-            }
-            robot.delay(1);                            
-        }
+            }                    
+        }        
     }
     
     private void moverMouse(int xInicio, int yInicio, int xFinal, int yFinal, int retardo){
@@ -143,12 +144,11 @@ public class RobotMouse implements Runnable{
         double yPasos;
         double x;
         double y;
-        int divisor = (int)((this.distanciaRecorrido(xInicio, yInicio, xFinal, yFinal)/retardo) + 2);
                 
         xPasos = ((double)(xFinal - xInicio)/(double)(retardo));
         yPasos = ((double)(yFinal - yInicio)/(double)(retardo));            
         
-        while (System.currentTimeMillis() < fin){
+        while (System.currentTimeMillis() <= fin){
             if(detener){ //Para interrumpir el hilo          
                 break;
             }            
@@ -160,63 +160,101 @@ public class RobotMouse implements Runnable{
     }   
     
     private void reproducirAccion(
-            ListaMoveMouse listaMoveMouse,
-            int indiceBucle,
-            boolean animar){
-        int posicionInicial;
-        int posicionFinal;
-        int iteraciones;
-        
-        if(listaMoveMouse.getCantidadObjetos() > 0){
-            ventana.actualizarControles(true);
-            
-            posicionInicial = listaMoveMouse.getPosicionInicialBucle(indiceBucle);
-            posicionFinal = listaMoveMouse.getPosicionFinalBucle(indiceBucle);
-            iteraciones = listaMoveMouse.getObjeto(posicionInicial).getIteraciones();
-            
-            principal:
-            for(int i = 0; i < iteraciones; i++){
-                if(detener){ //Para interrumpir el hilo                    
-                    break;                    
-                }
-                
-                for(int j = posicionInicial; j <= posicionFinal; j++){
-                    //ventana.setFilaSeleccionada(j);
-                    if(detener){ //Para interrumpir el hilo
-                        break principal;
-                    }
-                    
-                    if(indiceBucle != listaMoveMouse.getObjeto(j).getIndiceBucle()){                        
-                        reproducirAccion( //Llamado recursivo
-                                listaMoveMouse,
-                                listaMoveMouse.getObjeto(j).getIndice(),
-                                animar);
-                        j = listaMoveMouse.getPosicionObjeto(j);
+            DefaultMutableTreeNode nodo,
+            boolean animar){  
+        switch(((Accion)nodo.getUserObject()).getTipoAccion()){
+            case Accion.BUCLE:
+                for(int i = 0; i < ((Accion)nodo.getUserObject()).getBucle().getIteraciones(); i++){
+                    if(!detener){
+                        for(int j = 0; j < nodo.getChildCount(); j++){
+                            if(!detener){
+                                reproducirAccion((DefaultMutableTreeNode)nodo.getChildAt(j),animar);
+                            }else{
+                                break;
+                            }
+                        }
                     }else{
-                        if(animar){ //Animar las transiciones
-                            moverMouse(
-                                    MouseInfo.getPointerInfo().getLocation().x, 
-                                    MouseInfo.getPointerInfo().getLocation().y, 
-                                    listaMoveMouse.getObjeto(j).getX(), 
-                                    listaMoveMouse.getObjeto(j).getY(), 
-                                    listaMoveMouse.getObjeto(j).getRetardo());
-                        }else{ // Sin animaciones
-                            retardo(listaMoveMouse.getObjeto(j).getRetardo());
+                        break;
+                    }
+                }
+                break;
+            case Accion.CONDICIONAL:
+                this.retardoPortapapeles();
+                if(((Accion)nodo.getUserObject()).getCondicional().seCumple() && !detener){
+                    for(int i = 0; i < ((DefaultMutableTreeNode)nodo.getChildAt(0)).getChildCount(); i++){
+                        if(!detener){
+                            reproducirAccion((DefaultMutableTreeNode)((DefaultMutableTreeNode)nodo.getChildAt(0)).getChildAt(i),animar);
+                        }else{
+                            break;
                         }
-                        if(!detener){ //Para interrumpir el hilo
-                            accionMouse(listaMoveMouse.getObjeto(j));
+                    }    
+                }else{
+                    for(int i = 0; i < ((DefaultMutableTreeNode)nodo.getChildAt(1)).getChildCount(); i++){
+                        if(!detener){
+                            reproducirAccion((DefaultMutableTreeNode)((DefaultMutableTreeNode)nodo.getChildAt(1)).getChildAt(i),animar);
+                        }else{
+                            break;
                         }
                     }
-                }            
-            }            
-            ventana.actualizarControles(false);
-        }
+                }
+                break;
+            case Accion.BUCLE_CONDICIONADO:
+                switch(((Accion)nodo.getUserObject()).getBucleCondicionado().getTipoEvaluacion()){
+                    case BucleCondicionado.EVALUAR_ANTES:
+                        this.retardoPortapapeles();
+                        while(((Accion)nodo.getUserObject()).getBucleCondicionado().seCumple() && !detener){
+                            for(int i = 0; i < nodo.getChildCount(); i++){
+                                if(!detener){
+                                    reproducirAccion((DefaultMutableTreeNode)nodo.getChildAt(i),animar);
+                                }else{
+                                    break;
+                                }
+                            }
+                            this.retardoPortapapeles();
+                        }
+                        break;
+                    case BucleCondicionado.EVALUAR_DESPUES:
+                        do{
+                            for(int i = 0; i < nodo.getChildCount(); i++){
+                                if(!detener){
+                                    reproducirAccion((DefaultMutableTreeNode)nodo.getChildAt(i),animar);
+                                }else{
+                                    break;
+                                }
+                            }
+                            this.retardoPortapapeles();
+                        }while(((Accion)nodo.getUserObject()).getBucleCondicionado().seCumple() && !detener);
+                }                
+                break;
+            case Accion.ACCIONMOUSE:
+                ventana.seleccionarNodo(nodo);
+                if(animar){ //Animar las transiciones
+                    moverMouse(
+                            MouseInfo.getPointerInfo().getLocation().x, 
+                            MouseInfo.getPointerInfo().getLocation().y, 
+                            ((Accion)nodo.getUserObject()).getAccionMouse().getX(),
+                            ((Accion)nodo.getUserObject()).getAccionMouse().getY(),
+                            ((Accion)nodo.getUserObject()).getAccionMouse().getRetardo());
+                }else{ // Sin animaciones
+                    retardo(((Accion)nodo.getUserObject()).getAccionMouse().getRetardo());
+                }
+                if(!detener){ //Para interrumpir el hilo
+                    accionMouse(((Accion)nodo.getUserObject()).getAccionMouse());
+                }
+                break;
+            case Accion.ACCIONESPECIAL:
+                ventana.seleccionarNodo(nodo);
+                switch(((Accion)nodo.getUserObject()).getAccionEspecial().getAccionEspecial()){
+                    case AccionEspecial.COPIAR:
+                    case AccionEspecial.CORTAR:
+                    case AccionEspecial.INTRODUCIR_AL_PORTAPAPELES:
+                    case AccionEspecial.LIMPIAR_PORTAPAPELES:
+                        this.retardo(1000);
+                }                
+                ((Accion)nodo.getUserObject()).getAccionEspecial().ejecutar();
+        }        
     }
     
-    private double distanciaRecorrido(int xInicio, int yInicio, int xFinal, int yFinal){
-        return Math.sqrt(Math.pow((double)(xFinal - xInicio), 2) + Math.pow((double)(yFinal - yInicio), 2));        
-    }
-
     /**
      * Detiene la ejecución de reproduccion de acciones programadas del cursor.
      */
@@ -224,17 +262,35 @@ public class RobotMouse implements Runnable{
         detener = true;
     }
 
+    private void retardoPortapapeles(){
+        while(System.currentTimeMillis() <= instanteCambioPortapapeles){
+            /*Delay aplicado para que el Toolkit actualice el valor del 
+            portapapeles a partir del instante en que se realizó la copia*/
+            if(animar){
+                moverMouse(MouseInfo.getPointerInfo().getLocation().x,                                 
+                        MouseInfo.getPointerInfo().getLocation().y, 
+                        MouseInfo.getPointerInfo().getLocation().x,
+                        MouseInfo.getPointerInfo().getLocation().y,
+                        1);
+            }
+            if (detener){
+                break;
+            }
+        }
+    }
+    
     
     @Override
-    public void run() {        
+    public void run() {    
+        ventana.actualizarControles(true);
         if(ventana.getVentanaMinimizada()){
-            ventana.setExtendedState(JFrame.ICONIFIED);        
+            ventana.setExtendedState(JFrame.ICONIFIED);
         }
-        
-        reproducirAccion(listaMoveMouse, 0, animar);           
+        reproducirAccion(listaAcciones, animar);
         this.detener();
-        ventana.setExtendedState(JFrame.NORMAL);        
-        
-        Thread.currentThread().interrupt();               
+
+        ventana.setExtendedState(JFrame.NORMAL);
+        ventana.actualizarControles(false);
+        Thread.currentThread().interrupt();        
     }
 }
