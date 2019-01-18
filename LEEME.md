@@ -5,13 +5,29 @@ Software para ejecución de clics automáticos personalizable y multiplataforma 
 * Realiza tareas usando el cursor del sistema (movimientos y clics).
 * Permite realizar capturas de coordenadas y botones mediante pulsaciones.
 * Admite acciones de tipo: clic simple, doble clic, clic presionado y clic liberado.
-* Posee atajos de teclado para funciones fundamentales: Reproducir/Detener acciones, 
-capturar coordenadas instantáneas y Minimizar/Maximizar la ventana del programa.
+* Dispone de función de bucle de repetición finita (la cantidad de repeticiones es determinada por el usuario).
+* Dispone de funcion de bucle condicionado (la repetición del bucle viene dada por el cumplimiento de una condición).
+* Dispone de función de condicional. permitiendo ejecutar cierto grupo de acciones si se cumple o no cierta condición.
+* La evaluación de condiciones (para bucles condicionados o los condicionales) se apoya en los valores del portapapeles del sistema.
+* Dispone de acciones especiales basados en pulsaciones de teclas:
+  * Copiar - Ctrl C
+  * Cortar - Ctrl V
+  * Pegar - Ctrl X
+  * Deshacer - Ctrl Z
+  * Rehacer - Ctrl Y
+  * Refrescar - F5
+  * Cambiar pantalla - Alt Tab
+  * Cerrar - Ctrl F4
+  * Salir - Alt F4
+  * Entrar - Enter
+  * Escapar - Esc
+* Dispone de funciones de limpieza e inserción de datos al portapapeles del sistema.
+* Posee atajos de teclado para funciones fundamentales: Reproducir/Detener acciones, capturar coordenadas instantáneas y Minimizar/Maximizar la ventana del programa.
 * Guardar y recupera acciones programadas mediante el uso de archivos.
 * Es compatible con los sistemas operativos Microsoft Windows, GNU/Linux y Mac OS.
 
 ## Descarga
-* 11/11/2018 - [JAutoClicker V1.1](http://stratoplot.com/4n9g)
+* 17/01/2019 - [JAutoClicker V1.1](http://dapalan.com/H7RI)
 
 **Nota:** Requiere [Java](https://www.java.com) para su funcionamiento. 
 
