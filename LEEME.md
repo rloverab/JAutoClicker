@@ -1,6 +1,9 @@
 # JAutoClicker
 Software para ejecución de clics automáticos personalizable y multiplataforma escrito en Java.
 
+## Descarga
+* 17/01/2019 - [JAutoClicker V1.1](http://dapalan.com/H7RI)
+
 ## Funciones destacadas
 * Realiza tareas usando el cursor del sistema (movimientos y clics).
 * Permite realizar capturas de coordenadas y botones mediante pulsaciones.
@@ -25,9 +28,6 @@ Software para ejecución de clics automáticos personalizable y multiplataforma 
 * Posee atajos de teclado para funciones fundamentales: Reproducir/Detener acciones, capturar coordenadas instantáneas y Minimizar/Maximizar la ventana del programa.
 * Guardar y recupera acciones programadas mediante el uso de archivos.
 * Es compatible con los sistemas operativos Microsoft Windows, GNU/Linux y Mac OS.
-
-## Descarga
-* 17/01/2019 - [JAutoClicker V1.1](http://dapalan.com/H7RI)
 
 **Nota:** Requiere [Java](https://www.java.com) para su funcionamiento. 
 
