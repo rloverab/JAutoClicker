@@ -72,6 +72,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     private boolean capturarAccion;    
     private DefaultTreeModel dtm;
     private DefaultMutableTreeNode nodoBucleActual;
+    private Thread hilo;
     private final int BAJAR = 1;
     private final int SUBIR = -1;
     
@@ -1036,18 +1037,20 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                     accionMouse.setBoton(MouseEvent.BUTTON1);
                     break;
                 case 2:
-                    if(Validador.esWindows()){
+                    accionMouse.setBoton(MouseEvent.BUTTON2);                
+                    /*if(Validador.esWindows()){
                         accionMouse.setBoton(MouseEvent.BUTTON2);                
                     }else{
                         accionMouse.setBoton(MouseEvent.BUTTON3);                
-                    }
+                    }*/
                     break;                
                 case 3:
-                    if(Validador.esWindows()){
+                    accionMouse.setBoton(MouseEvent.BUTTON3);                
+                    /*if(Validador.esWindows()){
                         accionMouse.setBoton(MouseEvent.BUTTON3);                
                     }else{
                         accionMouse.setBoton(MouseEvent.BUTTON2);                
-                    }
+                    }*/
             }
             
             switch(cbxPulsacion.getSelectedIndex()){
@@ -1338,10 +1341,14 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                         (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent(), 
                         chkAnimar.isSelected(), 
                         this);
-                new Thread(robotMouse).start();
+                //new Thread(robotMouse).start();
+                ((Thread)robotMouse).start();
                 
-            }else{                
+                
+            }else{           
+                
                 ((RobotMouse)robotMouse).detener();
+                
                 robotMouse = null; 
             }
         }      
@@ -1443,7 +1450,8 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
 
     @Override
     public void nativeMousePressed(NativeMouseEvent nme) {        
-        int boton = nme.getButton();        
+        int boton = nme.getButton();     
+        System.out.println(nme.getButton());
         if (capturarCoordenada){ //Evalua si se captura de las coordenadas
             spinX.setValue(nme.getX()); //Asigna coordenadas capturadas
             spinY.setValue(nme.getY());

@@ -29,14 +29,13 @@ import org.jnativehook.GlobalScreen;
  *
  * @author Roger Lovera
  */
-public class RobotMouse implements Runnable{  
+public class RobotMouse extends Thread{  
     //Atributos
     private Robot robot;
     private DefaultMutableTreeNode listaAcciones;
     private VentanaPrincipal ventana;
     private boolean animar;
     private boolean detener;
-    private Long instanteCambioPortapapeles;
     
     //Constructores    
     public RobotMouse(){     
@@ -51,8 +50,7 @@ public class RobotMouse implements Runnable{
             this.listaAcciones = listaAcciones;
             this.animar = animar;
             this.ventana = ventana;
-            detener = false; 
-            instanteCambioPortapapeles = 0l;
+            detener = false;
         } catch (AWTException ex) {
             System.out.println(ex);
         }
@@ -130,7 +128,11 @@ public class RobotMouse implements Runnable{
     private void retardo(int retardo){  
         long fin = System.currentTimeMillis() + (long)retardo;
         while (System.currentTimeMillis() <= fin){
+            System.out.print(""); /*Necesario para que funcione correctamente el método "retardo".
+                                Si no le doy una instrucción que hacer, por algun motivo no se detiene al
+                                cumplirse la condición que desencadena la ejecución del método break.*/
             if(detener){ //Para interrumpir el hilo          
+                System.out.println("Retardo interrumpido");
                 break;
             }                    
         }        
@@ -149,13 +151,13 @@ public class RobotMouse implements Runnable{
         yPasos = ((double)(yFinal - yInicio)/(double)(retardo));            
         
         while (System.currentTimeMillis() <= fin){
-            if(detener){ //Para interrumpir el hilo          
+            if(!detener){
+                x = xInicio + ((double)(System.currentTimeMillis()-inicio))*xPasos;
+                y = yInicio +((double)(System.currentTimeMillis()-inicio))*yPasos;
+                robot.mouseMove((int)x, (int)y);
+            }else{ //Para interrumpir el hilo          
                 break;
-            }            
-            
-            x = xInicio + ((double)(System.currentTimeMillis()-inicio))*xPasos;
-            y = yInicio +((double)(System.currentTimeMillis()-inicio))*yPasos;
-            robot.mouseMove((int)x, (int)y);
+            }   
         }
     }   
     
@@ -170,22 +172,22 @@ public class RobotMouse implements Runnable{
                             if(!detener){
                                 reproducirAccion((DefaultMutableTreeNode)nodo.getChildAt(j),animar);
                             }else{
-                                break;
+                                return;
                             }
                         }
                     }else{
-                        break;
+                        return;
                     }
                 }
                 break;
             case Accion.CONDICIONAL:
-                this.retardoPortapapeles();
                 if(((Accion)nodo.getUserObject()).getCondicional().seCumple() && !detener){
                     for(int i = 0; i < ((DefaultMutableTreeNode)nodo.getChildAt(0)).getChildCount(); i++){
                         if(!detener){
                             reproducirAccion((DefaultMutableTreeNode)((DefaultMutableTreeNode)nodo.getChildAt(0)).getChildAt(i),animar);
                         }else{
-                            break;
+                            //break;
+                            return;
                         }
                     }    
                 }else{
@@ -193,7 +195,8 @@ public class RobotMouse implements Runnable{
                         if(!detener){
                             reproducirAccion((DefaultMutableTreeNode)((DefaultMutableTreeNode)nodo.getChildAt(1)).getChildAt(i),animar);
                         }else{
-                            break;
+                            //break;
+                            return;
                         }
                     }
                 }
@@ -201,16 +204,15 @@ public class RobotMouse implements Runnable{
             case Accion.BUCLE_CONDICIONADO:
                 switch(((Accion)nodo.getUserObject()).getBucleCondicionado().getTipoEvaluacion()){
                     case BucleCondicionado.EVALUAR_ANTES:
-                        this.retardoPortapapeles();
                         while(((Accion)nodo.getUserObject()).getBucleCondicionado().seCumple() && !detener){
                             for(int i = 0; i < nodo.getChildCount(); i++){
                                 if(!detener){
                                     reproducirAccion((DefaultMutableTreeNode)nodo.getChildAt(i),animar);
                                 }else{
-                                    break;
+                                    //break;
+                                    return;
                                 }
                             }
-                            this.retardoPortapapeles();
                         }
                         break;
                     case BucleCondicionado.EVALUAR_DESPUES:
@@ -219,10 +221,9 @@ public class RobotMouse implements Runnable{
                                 if(!detener){
                                     reproducirAccion((DefaultMutableTreeNode)nodo.getChildAt(i),animar);
                                 }else{
-                                    break;
+                                    return;
                                 }
                             }
-                            this.retardoPortapapeles();
                         }while(((Accion)nodo.getUserObject()).getBucleCondicionado().seCumple() && !detener);
                 }                
                 break;
@@ -249,9 +250,13 @@ public class RobotMouse implements Runnable{
                     case AccionEspecial.CORTAR:
                     case AccionEspecial.INTRODUCIR_AL_PORTAPAPELES:
                     case AccionEspecial.LIMPIAR_PORTAPAPELES:
-                        this.retardo(1000);
-                }                
-                ((Accion)nodo.getUserObject()).getAccionEspecial().ejecutar();
+                        if(!detener){
+                            this.retardo(1000);
+                        }                            
+                }           
+                if(!detener){
+                    ((Accion)nodo.getUserObject()).getAccionEspecial().ejecutar();
+                }
         }        
     }
     
@@ -261,24 +266,6 @@ public class RobotMouse implements Runnable{
     public void detener(){
         detener = true;
     }
-
-    private void retardoPortapapeles(){
-        while(System.currentTimeMillis() <= instanteCambioPortapapeles){
-            /*Delay aplicado para que el Toolkit actualice el valor del 
-            portapapeles a partir del instante en que se realizó la copia*/
-            if(animar){
-                moverMouse(MouseInfo.getPointerInfo().getLocation().x,                                 
-                        MouseInfo.getPointerInfo().getLocation().y, 
-                        MouseInfo.getPointerInfo().getLocation().x,
-                        MouseInfo.getPointerInfo().getLocation().y,
-                        1);
-            }
-            if (detener){
-                break;
-            }
-        }
-    }
-    
     
     @Override
     public void run() {    
@@ -292,5 +279,10 @@ public class RobotMouse implements Runnable{
         ventana.setExtendedState(JFrame.NORMAL);
         ventana.actualizarControles(false);
         Thread.currentThread().interrupt();        
+        if(Thread.currentThread().isInterrupted()){
+            System.out.println("Esta interrumpido");
+        }else{
+            System.out.println("No esta interrumpido");
+        }
     }
 }
