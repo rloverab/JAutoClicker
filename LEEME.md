@@ -2,7 +2,7 @@
 Software para ejecución de clics automáticos personalizable y multiplataforma escrito en Java.
 
 ## Descarga
-* 17/01/2019 - [JAutoClicker V1.1](http://dapalan.com/H7RI)
+* 17/01/2019 - [JAutoClicker V2.0](http://dapalan.com/H7RI)
 
 ## Funciones destacadas
 * Realiza tareas usando el cursor del sistema (movimientos y clics).
