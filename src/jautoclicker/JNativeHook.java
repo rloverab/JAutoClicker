@@ -32,7 +32,7 @@ public class JNativeHook {
     public JNativeHook() throws NativeHookException {
         GlobalScreen.registerNativeHook();
         
-//Desactivar salidas por consola
+    //Desactivar salidas por consola
         Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
         logger.setLevel(Level.OFF);            
         logger.setUseParentHandlers(false);
@@ -50,11 +50,11 @@ public class JNativeHook {
         GlobalScreen.addNativeKeyListener(nativeKeyListener);                
     }
     
-    public void cerrar(){
+    public static void cerrar(){
         try {
-            GlobalScreen.unregisterNativeHook();
+            GlobalScreen.unregisterNativeHook();            
         } catch (NativeHookException ex) {
-            Logger.getLogger(Ventana.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(VentanaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
