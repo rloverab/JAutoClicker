@@ -149,7 +149,7 @@ public class RobotMouse extends Thread{
                 
         xPasos = ((double)(xFinal - xInicio)/(double)(retardo));
         yPasos = ((double)(yFinal - yInicio)/(double)(retardo));            
-        
+
         while (System.currentTimeMillis() <= fin){
             if(!detener){
                 x = xInicio + ((double)(System.currentTimeMillis()-inicio))*xPasos;

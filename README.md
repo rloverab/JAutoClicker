@@ -10,7 +10,9 @@ Software for executing customizable clicks and cross-platform written in JAVA.
 * It is compatible with Microsoft Windows, GNU/Linux and Mac OS operating systems.
 
 ## Download
-* 09/24/2018 - [JAutoClicker V1.0](https://github.com/rloverab/JAutoClicker/releases/download/V1.0/JAutoClicker.V1.0.zip)
+* 11/11/2018 - [JAutoClicker V1.1](http://stratoplot.com/4n9g)
+
+**Note:** Requires [Java](https://www.java.com) for its operation.
 
 ## About the software and the reason for its development
 I am a user of this type of software. I have used many and although they have been very helpful I did not feel comfortable with them. Some lacked functions that I would have liked them to have. In the end I decided to develop my own software with the features that I would have liked to find in other similar software. In principle it would be for personal use but over time I changed my mind and decided to share it to give the opportunity for others to use as well as to improve it by providing ideas and developing code. I am a user of GNU/Linux and Microsoft Windows operating systems, therefore this application should work in the same way in both environments so I opted to develop it using JAVA language.
