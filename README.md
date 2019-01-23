@@ -2,7 +2,7 @@
 Software for executing customizable clicks and cross-platform written in JAVA.
 
 ## Download
-* 2019/01/17 - [JAutoClicker V2.0](http://dapalan.com/H7RI)
+* 01/17/2019 - [JAutoClicker V2.0](http://dapalan.com/H7RI)
 
 **Note:** Requires [Java](https://www.java.com) for its operation.
 
