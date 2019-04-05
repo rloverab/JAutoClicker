@@ -131,8 +131,7 @@ public class RobotMouse extends Thread{
             System.out.print(""); /*Necesario para que funcione correctamente el método "retardo".
                                 Si no le doy una instrucción que hacer, por algun motivo no se detiene al
                                 cumplirse la condición que desencadena la ejecución del método break.*/
-            if(detener){ //Para interrumpir el hilo          
-                System.out.println("Retardo interrumpido");
+            if(detener){ //Para interrumpir el hilo                          
                 break;
             }                    
         }        
@@ -245,18 +244,22 @@ public class RobotMouse extends Thread{
                 break;
             case Accion.ACCIONESPECIAL:
                 ventana.seleccionarNodo(nodo);
-                switch(((Accion)nodo.getUserObject()).getAccionEspecial().getAccionEspecial()){
-                    case AccionEspecial.COPIAR:
-                    case AccionEspecial.CORTAR:
-                    case AccionEspecial.INTRODUCIR_AL_PORTAPAPELES:
-                    case AccionEspecial.LIMPIAR_PORTAPAPELES:
-                        if(!detener){
-                            this.retardo(1000);
-                        }                            
-                }           
                 if(!detener){
                     ((Accion)nodo.getUserObject()).getAccionEspecial().ejecutar();
+                    switch(((Accion)nodo.getUserObject()).getAccionEspecial().getAccionEspecial()){
+                        case AccionEspecial.COPIAR:
+                        case AccionEspecial.CORTAR:
+                        case AccionEspecial.INTRODUCIR_AL_PORTAPAPELES:
+                        case AccionEspecial.LIMPIAR_PORTAPAPELES:   
+                        case AccionEspecial.SELECCIONAR_PESTANA_DERECHA:
+                        case AccionEspecial.SELECCIONAR_PESTANA_IZQUIERDA:
+                            if(!detener){                            
+                                this.retardo(1000); 
+                            }                            
+                    }
                 }
+                               
+                
         }        
     }
     
@@ -278,11 +281,6 @@ public class RobotMouse extends Thread{
 
         ventana.setExtendedState(JFrame.NORMAL);
         ventana.actualizarControles(false);
-        Thread.currentThread().interrupt();        
-        if(Thread.currentThread().isInterrupted()){
-            System.out.println("Esta interrumpido");
-        }else{
-            System.out.println("No esta interrumpido");
-        }
+        Thread.currentThread().interrupt(); 
     }
 }

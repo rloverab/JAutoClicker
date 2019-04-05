@@ -630,18 +630,20 @@
                   <Component id="jScrollPane2" min="-2" pref="348" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="btnPlay" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
-                              <Component id="btnBajar" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
-                              <Component id="btnSubir" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
-                              <Component id="btnBorrar" alignment="1" min="-2" pref="125" max="-2" attributes="0"/>
+                      <Group type="102" alignment="1" attributes="0">
+                          <Component id="btnSubir" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                      </Group>
+                      <Group type="102" alignment="1" attributes="0">
+                          <Group type="103" groupAlignment="1" attributes="0">
+                              <Component id="btnBorrar" alignment="0" max="32767" attributes="0"/>
+                              <Component id="btnBajar" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
-                      <Group type="102" attributes="0">
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="lblIterations" max="32767" attributes="0"/>
+                      <Group type="102" alignment="1" attributes="0">
+                          <Group type="103" groupAlignment="1" attributes="0">
+                              <Component id="lblIterations" alignment="0" max="32767" attributes="0"/>
                               <Group type="102" alignment="0" attributes="0">
                                   <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
                                   <Group type="103" groupAlignment="0" attributes="0">
@@ -652,11 +654,12 @@
                                       <Component id="chkAnimar" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
+                              <Component id="spinIteraciones" alignment="0" max="32767" attributes="0"/>
                           </Group>
                           <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
                       </Group>
-                      <Group type="102" alignment="1" attributes="0">
-                          <Component id="spinIteraciones" max="32767" attributes="0"/>
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="btnPlay" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -756,6 +759,9 @@
               <ResourceString bundle="jautoclicker/Bundle.properties" key="ANIMAR" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="chkAnimarStateChanged"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JCheckBox" name="chkMinimizar">
           <Properties>
@@ -763,6 +769,9 @@
               <ResourceString bundle="jautoclicker/Bundle.properties" key="MINIMIZAR" replaceFormat="java.util.ResourceBundle.getBundle(&quot;{bundleNameSlashes}&quot;).getString(&quot;{key}&quot;)"/>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="chkMinimizarStateChanged"/>
+          </Events>
         </Component>
         <Container class="javax.swing.JScrollPane" name="jScrollPane2">
           <AuxValues>

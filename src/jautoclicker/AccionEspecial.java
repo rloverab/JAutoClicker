@@ -27,7 +27,6 @@ public class AccionEspecial implements Serializable{
     //Atributos
     private int tipoAccionEspecial;
     private String contenidoPortapapeles;
-    private Portapapeles portapapeles;
     
     //Constantes
     /**
@@ -114,6 +113,18 @@ public class AccionEspecial implements Serializable{
      */
     public final static int INTRODUCIR_AL_PORTAPAPELES = 13;
     
+    /**
+     * Tipo de acción especial: 
+     * <b>SELECCIONAR_PESTANA_DERECHA = 14</b>
+     */
+    public final static int SELECCIONAR_PESTANA_DERECHA = 14;
+    
+    /**
+     * Tipo de acción especial: 
+     * <b>SELECCIONAR_PESTANA_IZQUIERDA = 15</b>
+     */
+    public final static int SELECCIONAR_PESTANA_IZQUIERDA = 15;
+    
     //Constructores
     public AccionEspecial() {
         this(NO_DEFINIDA);
@@ -164,6 +175,9 @@ public class AccionEspecial implements Serializable{
      * <b>ENTRAR = 10</b><br>
      * <b>ESCAPAR = 11</b><br>
      * <b>LIMPIAR_PORTAPAPELES = 12</b><br>
+     * <b>INTRODUCIR_AL_PORTAPAPELES = 13</b><br>
+     * <b>SELECCIONAR_PESTANA_DERECHA = 14</b><br>
+     * <b>SELECCIONAR_PESTANA_IZQUIERDA = 15</b><br>
      */
     public int getAccionEspecial(){
         return tipoAccionEspecial;
@@ -213,6 +227,12 @@ public class AccionEspecial implements Serializable{
                 break;
             case LIMPIAR_PORTAPAPELES:
                 Portapapeles.limpiarPortapapeles();
+                break;
+            case SELECCIONAR_PESTANA_DERECHA:
+                Hotkeys.seleccionarPestanaDerecha();
+                break;
+            case SELECCIONAR_PESTANA_IZQUIERDA:
+                Hotkeys.seleccionarPestanaIzquierda();
         }
     }
     
@@ -248,7 +268,11 @@ public class AccionEspecial implements Serializable{
                     return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("INTRODUCIR AL PORTAPAPELES") + ": \"" + contenidoPortapapeles.trim() + "\""; // Introducir al portapapeles
                 }
             case LIMPIAR_PORTAPAPELES:
-                return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("LIMPIAR EL PORTAPAPELES");
+                return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("LIMPIAR EL PORTAPAPELES"); // Limpiar el portapapeles
+            case SELECCIONAR_PESTANA_DERECHA:
+                return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: SELECCIONAR PESTAÑA DERECHA"); // Seleccionar pestaña derecha
+            case SELECCIONAR_PESTANA_IZQUIERDA:
+                return java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: SELECCIONAR PESTAÑA IZQUIERDA"); // Seleccionar pestaña derecha
             default:
                 return "No definido";
         }

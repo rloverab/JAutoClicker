@@ -227,4 +227,29 @@ public final class Hotkeys {
         }
     }
     
+    public static void seleccionarPestanaDerecha(){
+        try {
+            Robot robot;
+            robot = new Robot();
+            robot.keyPress(KeyEvent.VK_CONTROL);
+            robot.keyPress(KeyEvent.VK_PAGE_DOWN);
+            robot.keyRelease(KeyEvent.VK_CONTROL);
+            robot.keyRelease(KeyEvent.VK_PAGE_DOWN);
+        } catch (AWTException ex) {
+            Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public static void seleccionarPestanaIzquierda(){
+        try {
+            Robot robot;
+            robot = new Robot();
+            robot.keyPress(KeyEvent.VK_CONTROL);            
+            robot.keyPress(KeyEvent.VK_PAGE_UP);
+            robot.keyRelease(KeyEvent.VK_CONTROL);            
+            robot.keyRelease(KeyEvent.VK_PAGE_UP);
+        } catch (AWTException ex) {
+            Logger.getLogger(Hotkeys.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

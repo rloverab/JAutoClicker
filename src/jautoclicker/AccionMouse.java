@@ -109,18 +109,20 @@ public class AccionMouse implements Serializable{
         switch (boton){            
             case MouseEvent.BUTTON1: //Izquierdo
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("IZQUIERDO");
-            case MouseEvent.BUTTON2: //Centro o derecho               
-                if(Validador.esWindows()){ //Centro
+            case MouseEvent.BUTTON2: //Centro o derecho  
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("CENTRO");
+                /*if(Validador.esWindows()){ //Centro
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("CENTRO");
                 }else{ //Derecho
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DERECHO");
-                }                
-            case MouseEvent.BUTTON3: //Derecho o centro                
-                if(Validador.esWindows()){ //Derecho
+                }*/                
+            case MouseEvent.BUTTON3: //Derecho o centro      
+                return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DERECHO");
+                /*if(Validador.esWindows()){ //Derecho
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("DERECHO");
                 }else{ //Centro
                     return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("CENTRO");
-                }                 
+                }*/                 
             default: //Ninguno
                 return ResourceBundle.getBundle("jautoclicker/Bundle", Locale.getDefault()).getString("NINGUNO");
         }

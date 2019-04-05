@@ -43,6 +43,7 @@ import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -71,8 +72,8 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     private boolean capturarCoordenada;
     private boolean capturarAccion;    
     private DefaultTreeModel dtm;
-    private DefaultMutableTreeNode nodoBucleActual;
-    private Thread hilo;
+    private DefaultMutableTreeNode nodoBucleActual;    
+    private boolean guardarCambios;
     private final int BAJAR = 1;
     private final int SUBIR = -1;
     
@@ -88,8 +89,9 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         TreeSelectionListener treeSelectionListener;
         FocusListener focusListener;
         
-        //Instancia de objetos;
+        //Instancia de objetos y inicialización de variales        
         teclasPulsadas = new ArrayList<>();
+        guardarCambios = false;
         nombreArchivo = "";
         pulsacion = new DefaultComboBoxModel(new String[] { 
             java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("SIMPLE"), 
@@ -111,13 +113,16 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
             java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: DESHACER - CONTROL Z"), //6: Hotkey: Deshacer - Control Z
             java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: REHACER - CONTROL Y"), //7: Hotkey: Rehacer - Control Y
             java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: CAMBIAR VENTANA - ALT TAB"), //8: Hotkey: Cambiar ventana - Alt Tab
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: CERRAR - CONTROL F4"), //9: Hotkey: Cerrar - Control F4
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: SALIR - ALT F4"), //10: Hotkey: Salir - Alt F4
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: REFRESCAR - F5"), //11: Hotkey: Refrescar - F5
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ENTRAR - ENTER"), //12: Tecla: Entrar - Enter
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ESCAPAR - ESC"), //13: Tecla: Escapar - Esc
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("INTRODUCIR AL PORTAPAPELES"), //14: Introducir al portapapeles
-            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("LIMPIAR EL PORTAPAPELES")}); //15: Hotkey Escapar - Esc
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: SELECCIONAR PESTAÑA DERECHA"), //9: Hotkey: Seleccionar pestaña derecha
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: SELECCIONAR PESTAÑA IZQUIERDA"), //10: Hotkey: Seleccionar pestaña izquierda
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: CERRAR - CONTROL F4"), //11: Hotkey: Cerrar - Control F4
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: SALIR - ALT F4"), //12: Hotkey: Salir - Alt F4
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: REFRESCAR - F5"), //13: Hotkey: Refrescar - F5
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ENTRAR - ENTER"), //14: Tecla: Entrar - Enter
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("HOTKEY: ESCAPAR - ESC"), //15: Tecla: Escapar - Esc
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("INTRODUCIR AL PORTAPAPELES"), //16: Introducir al portapapeles
+            java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("LIMPIAR EL PORTAPAPELES")}); //17: Hotkey Escapar - Esc
+            
         
         // Generación de ventana
         initComponents(); 
@@ -217,7 +222,6 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
             @Override
             public void keyPressed(KeyEvent e) {
                 //Sin implementar
-
             }
 
             @Override
@@ -225,6 +229,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                 //Sin implementar
             }
         };
+        
         treeSelectionListener = new TreeSelectionListener(){
             DefaultMutableTreeNode nodoBucle;
             @Override
@@ -297,7 +302,10 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         
         actualizarBotones();
         
-        nodoBucleActual = (DefaultMutableTreeNode)dtm.getRoot();        
+        nodoBucleActual = (DefaultMutableTreeNode)dtm.getRoot(); 
+        
+        itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);     
+        itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);                
     }
 
     /**
@@ -626,8 +634,18 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         lblIterations.setText(bundle.getString("ITERACIONES")); // NOI18N
 
         chkAnimar.setText(bundle.getString("ANIMAR")); // NOI18N
+        chkAnimar.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                chkAnimarStateChanged(evt);
+            }
+        });
 
         chkMinimizar.setText(bundle.getString("MINIMIZAR")); // NOI18N
+        chkMinimizar.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                chkMinimizarStateChanged(evt);
+            }
+        });
 
         jScrollPane2.setViewportView(jtAcciones);
 
@@ -640,26 +658,28 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 348, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
-                        .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnPlay, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnBajar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnSubir, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnBorrar, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panOrdenEjecucionLayout.createSequentialGroup()
+                        .addComponent(btnSubir, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())
-                    .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
-                        .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(lblIterations, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panOrdenEjecucionLayout.createSequentialGroup()
+                        .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(btnBorrar, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnBajar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap())
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panOrdenEjecucionLayout.createSequentialGroup()
+                        .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(lblIterations, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, panOrdenEjecucionLayout.createSequentialGroup()
                                 .addGap(1, 1, 1)
                                 .addGroup(panOrdenEjecucionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
                                         .addComponent(chkMinimizar)
                                         .addGap(0, 0, Short.MAX_VALUE))
-                                    .addComponent(chkAnimar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                    .addComponent(chkAnimar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(spinIteraciones, javax.swing.GroupLayout.Alignment.LEADING))
                         .addGap(11, 11, 11))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panOrdenEjecucionLayout.createSequentialGroup()
-                        .addComponent(spinIteraciones)
+                    .addGroup(panOrdenEjecucionLayout.createSequentialGroup()
+                        .addComponent(btnPlay, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addContainerGap())))
         );
         panOrdenEjecucionLayout.setVerticalGroup(
@@ -887,6 +907,9 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                         JOptionPane.INFORMATION_MESSAGE);                
                 nombreArchivo = archivo;
                 this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER") + " - " + this.soloNombreArchivo());
+                guardarCambios = false;
+                itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+                itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
             } catch (IOException ex) {
                 System.out.println(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("NO SE PUDE GUARDAR EL ARCHIVO:")+ex);
             }
@@ -899,9 +922,8 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         ObjectInputStream ois;
         Object aux;
         JFileChooser selectorArchivo;
-        
-        selectorArchivo = new JFileChooser();
-        
+                
+        selectorArchivo = new JFileChooser();        
         selectorArchivo.setFileFilter(new FileNameExtensionFilter(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("ARCHIVOS JAUTOCLICKER"),"jac"));
         if(selectorArchivo.showOpenDialog(this) == JFileChooser.APPROVE_OPTION){
             archivo = selectorArchivo.getSelectedFile().toString();
@@ -923,6 +945,9 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                         nombreArchivo = archivo;
                         this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER") + " - " + this.soloNombreArchivo());
                     }
+                    guardarCambios = false;
+                    itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+                    itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
                 } catch (IOException | ClassNotFoundException ex) { 
                     System.out.println(ex);
                     JOptionPane.showMessageDialog(
@@ -945,6 +970,9 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     private void agregarNodo(Accion accion){
         DefaultMutableTreeNode nodoSeleccionado, nodoNuevo;
         
+        guardarCambios = true;
+        itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
         nodoSeleccionado = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
         
         if(nodoSeleccionado == null){
@@ -991,13 +1019,10 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                             dtm.getIndexOfChild(nodoSeleccionado.getParent(), nodoSeleccionado)+1);
             }
             jtAcciones.expandPath(jtAcciones.getSelectionPath());
-
-            //seleccionarNodo(nodoNuevo);                  
         }
         
         if(accion.getTipoAccion() == Accion.CONDICIONAL){
             jtAcciones.expandPath(new TreePath(nodoNuevo.getPath()));
-            //jtAcciones.setSelectionPath(new TreePath(((DefaultMutableTreeNode)nodoNuevo.getChildAt(0)).getPath()));
             seleccionarNodo(((DefaultMutableTreeNode)nodoNuevo.getChildAt(0)));
             jtAcciones.scrollPathToVisible(new TreePath(((DefaultMutableTreeNode)nodoNuevo.getChildAt(1)).getPath()));
         }else{
@@ -1027,8 +1052,10 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         accionMouse = new AccionMouse();
         accion = new Accion();
         
+        guardarCambios = true;        
+        itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
         accionMouse.setCoordenada((int)spinX.getValue(), (int)spinY.getValue());
-
         accionMouse.setRetardo((int)spinRetardo.getValue());
         
         if(cbxBoton.getSelectedIndex() != 0){
@@ -1037,20 +1064,10 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                     accionMouse.setBoton(MouseEvent.BUTTON1);
                     break;
                 case 2:
-                    accionMouse.setBoton(MouseEvent.BUTTON2);                
-                    /*if(Validador.esWindows()){
-                        accionMouse.setBoton(MouseEvent.BUTTON2);                
-                    }else{
-                        accionMouse.setBoton(MouseEvent.BUTTON3);                
-                    }*/
+                    accionMouse.setBoton(MouseEvent.BUTTON2); 
                     break;                
                 case 3:
-                    accionMouse.setBoton(MouseEvent.BUTTON3);                
-                    /*if(Validador.esWindows()){
-                        accionMouse.setBoton(MouseEvent.BUTTON3);                
-                    }else{
-                        accionMouse.setBoton(MouseEvent.BUTTON2);                
-                    }*/
+                    accionMouse.setBoton(MouseEvent.BUTTON3); 
             }
             
             switch(cbxPulsacion.getSelectedIndex()){
@@ -1129,27 +1146,35 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CAMBIAR_VENTANA));
                 break;
-            case 9: //Cerrar
+            case 9: //Seleccionar pestaña derecha
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.SELECCIONAR_PESTANA_DERECHA));
+                break;
+            case 10: //Seleccionar pestaña derecha
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.SELECCIONAR_PESTANA_IZQUIERDA));
+                break;
+            case 11: //Cerrar
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.CERRAR));
                 break;
-            case 10: //Salir
+            case 12: //Salir
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.SALIR));
                 break;
-            case 11: //Refrescar
+            case 13: //Refrescar
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.REFRESCAR));
                 break;
-            case 12: //Entrar
+            case 14: //Entrar
+                accion = new Accion();
+                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.ENTRAR));
+                break;
+            case 15: //Escapar
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.ESCAPAR));
                 break;
-            case 13: //Escapar
-                accion = new Accion();
-                accion.setAccionEspecial(new AccionEspecial(AccionEspecial.ESCAPAR));
-                break;
-            case 14: //
+            case 16: //Introducir al portapapeles
                 DialogoContenidoPortapapeles dlgContenidoPortapapeles =  new DialogoContenidoPortapapeles(this, true);
                 dlgContenidoPortapapeles.setLocationRelativeTo(this);
                 dlgContenidoPortapapeles.setVisible(true);
@@ -1158,9 +1183,11 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                     accion.setAccionEspecial(dlgContenidoPortapapeles.getAccionEspecial());
                 }
                 break;
-            case 15: //Limpiar el portapapeles
+            case 17: //Limpiar el portapapeles
                 accion = new Accion();
                 accion.setAccionEspecial(new AccionEspecial(AccionEspecial.LIMPIAR_PORTAPAPELES));
+                break;
+            
         }
         
         if(accion != null){
@@ -1208,12 +1235,20 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         chkMinimizar.setEnabled(activar);
         itemNuevo.setEnabled(activar);
         itemAbrir.setEnabled(activar);
-        itemGuardar.setEnabled(activar);
-        itemGuardarComo.setEnabled(activar);
         
+        if(activar){
+            itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+            itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        }else{
+            itemGuardar.setEnabled(false);
+            itemGuardarComo.setEnabled(false);
+        }
     }
     
     private void actualizarIteraciones(){
+        guardarCambios = true;
+        itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
         ((Accion)nodoBucleActual.getUserObject()).getBucle().setIteraciones((int)spinIteraciones.getValue());                        
             dtm.nodeChanged(nodoBucleActual);        
     }
@@ -1224,7 +1259,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         int filaArbol;
         boolean expandir;
         int factor;
-        
+                
         factor = direccion;            
         
         nodoSeleccionado = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();        
@@ -1235,6 +1270,10 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
             if(!(nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("VERDADERO")) || 
                     nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("FALSO")))){
                 if(nodoSeleccionado.getParent() != null){ 
+                    guardarCambios = true;
+                    itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+                    itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        
                     indiceSeleccionado = dtm.getIndexOfChild( 
                             nodoSeleccionado.getParent(), 
                             nodoSeleccionado);
@@ -1280,32 +1319,40 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     } 
     
     private void borrarClicks(){ 
-        DefaultMutableTreeNode dmtn;
+        DefaultMutableTreeNode dmtn, nodoSeleccionado;
         TreeNode aux;
         int indice;
         
-        dmtn = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
-        indice = dmtn.getParent().getIndex(dmtn);
-        if(indice > 0){
-            aux = (DefaultMutableTreeNode)dmtn.getParent().getChildAt(indice - 1);            
-        }else{
-            if(dmtn.getParent().getChildCount() > 1){
-                aux = (DefaultMutableTreeNode)dmtn.getParent().getChildAt(indice + 1);                
-            }else{
-                aux = (DefaultMutableTreeNode)dmtn.getParent();         
-            }
-        }  
+        nodoSeleccionado = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();   
         
-        if(!dmtn.isRoot()){
-            dtm.removeNodeFromParent(dmtn);            
-        } 
-        for(int i = 0; i < jtAcciones.getRowCount(); i++){
-            jtAcciones.setSelectionRow(i);
-            if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
-                break;
+        if(!(nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("VERDADERO")) || 
+                    nodoSeleccionado.toString().equals(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("FALSO")))){
+            guardarCambios = true;
+            itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+            itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+            dmtn = (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent();
+            indice = dmtn.getParent().getIndex(dmtn);
+            if(indice > 0){
+                aux = (DefaultMutableTreeNode)dmtn.getParent().getChildAt(indice - 1);            
+            }else{
+                if(dmtn.getParent().getChildCount() > 1){
+                    aux = (DefaultMutableTreeNode)dmtn.getParent().getChildAt(indice + 1);                
+                }else{
+                    aux = (DefaultMutableTreeNode)dmtn.getParent();         
+                }
+            }  
+
+            if(!dmtn.isRoot()){
+                dtm.removeNodeFromParent(dmtn);            
+            } 
+            for(int i = 0; i < jtAcciones.getRowCount(); i++){
+                jtAcciones.setSelectionRow(i);
+                if(aux == (DefaultMutableTreeNode)jtAcciones.getLastSelectedPathComponent()){
+                    break;
+                }
             }
+            actualizarBotones();
         }
-        actualizarBotones();
     }
     
     /**
@@ -1355,6 +1402,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     }
     
     private void nuevo(){
+        guardarCambios = false;
         nombreArchivo = "";
         spinX.setValue(0);
         spinY.setValue(0);
@@ -1369,22 +1417,30 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         chkMinimizar.setSelected(false);
         chkAnimar.setSelected(false);                
         this.setTitle(java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("JAUTOCLICKER"));
+        itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
     }
     
     private boolean permitirSalida(){
-        if(JOptionPane.showConfirmDialog(
-                rootPane, 
-                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
-                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
-                JOptionPane.YES_NO_OPTION, 
-                JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION){
-            if(guardarArchivo(nombreArchivo.isEmpty())){
-                return true;
-            }               
-        }else{
-            return true;
-        }        
-        return false;
+        int respuesta;
+        if(jtAcciones.getRowCount()>1 && guardarCambios){
+            respuesta = JOptionPane.showConfirmDialog(
+                    rootPane, 
+                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
+                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
+                    JOptionPane.YES_NO_CANCEL_OPTION, 
+                    JOptionPane.WARNING_MESSAGE);
+            
+            switch(respuesta){
+                case JOptionPane.YES_OPTION:                    
+                    return guardarArchivo(nombreArchivo.isEmpty());
+                case JOptionPane.NO_OPTION:
+                    return true;
+                default:
+                    return false;
+            }            
+        }
+        return true;
     }
     
     private void salir(){        
@@ -1414,6 +1470,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
         int keyCode;
         keyCode = nke.getKeyCode();
         
+        System.out.println(keyCode);
         if(!teclasPulsadas.contains(keyCode)){
             teclasPulsadas.add(keyCode);
         }        
@@ -1450,8 +1507,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
 
     @Override
     public void nativeMousePressed(NativeMouseEvent nme) {        
-        int boton = nme.getButton();     
-        System.out.println(nme.getButton());
+        int boton = nme.getButton(); 
         if (capturarCoordenada){ //Evalua si se captura de las coordenadas
             spinX.setValue(nme.getX()); //Asigna coordenadas capturadas
             spinY.setValue(nme.getY());
@@ -1554,15 +1610,24 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     }//GEN-LAST:event_itemSalirActionPerformed
 
     private void itemNuevoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemNuevoActionPerformed
-        if(JOptionPane.showConfirmDialog(
-                rootPane, 
-                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
-                java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
-                JOptionPane.YES_NO_OPTION, 
-                JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION){
-            if(guardarArchivo(nombreArchivo.isEmpty())){
-                nuevo();
-            }               
+        int respuesta;
+        if(jtAcciones.getRowCount() > 1 && guardarCambios){            
+            respuesta = JOptionPane.showConfirmDialog(
+                    rootPane, 
+                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
+                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
+                    JOptionPane.YES_NO_CANCEL_OPTION, 
+                    JOptionPane.WARNING_MESSAGE);
+            
+            switch(respuesta){
+                case JOptionPane.YES_OPTION:                    
+                    if(guardarArchivo(nombreArchivo.isEmpty())){
+                        nuevo();
+                    }
+                    break;
+                case JOptionPane.NO_OPTION:
+                    nuevo();
+            }
         }else{
             nuevo();
         }        
@@ -1573,19 +1638,42 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     }//GEN-LAST:event_cbxBotonItemStateChanged
 
     private void itemGuardarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarActionPerformed
-        guardarArchivo(false);
+        if(jtAcciones.getRowCount() > 1 && guardarCambios){
+            guardarArchivo(false);
+        }
     }//GEN-LAST:event_itemGuardarActionPerformed
 
     private void itemAbrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemAbrirActionPerformed
-        abrirArchivo();
+        int respuesta;
+        if(jtAcciones.getRowCount() > 1 && guardarCambios){
+            respuesta = JOptionPane.showConfirmDialog(
+                    rootPane, 
+                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("¿DESEA GUARDAR LOS CAMBIOS PRIMERO?"), 
+                    java.util.ResourceBundle.getBundle("jautoclicker/Bundle").getString("GUARDAR CAMBIOS"), 
+                    JOptionPane.YES_NO_CANCEL_OPTION, 
+                    JOptionPane.WARNING_MESSAGE);
+            
+            switch(respuesta){
+                case JOptionPane.YES_OPTION:                    
+                    if(guardarArchivo(nombreArchivo.isEmpty())){
+                        abrirArchivo();
+                    }
+                    break;
+                case JOptionPane.NO_OPTION:
+                    abrirArchivo();
+            }
+        }else{
+            abrirArchivo();
+        }
     }//GEN-LAST:event_itemAbrirActionPerformed
 
     private void itemGuardarComoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemGuardarComoActionPerformed
-        guardarArchivo(true);
+        if(jtAcciones.getRowCount() > 1 && guardarCambios){
+            guardarArchivo(true);
+        }
     }//GEN-LAST:event_itemGuardarComoActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        // TODO add your handling code here:
         salir();
     }//GEN-LAST:event_formWindowClosing
 
@@ -1613,9 +1701,20 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
     }//GEN-LAST:event_itemManualActionPerformed
 
     private void btnAgregarAccionEspecialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarAccionEspecialActionPerformed
-        // TODO add your handling code here:
-        this.agregarAccionEspecial();
+        agregarAccionEspecial();
     }//GEN-LAST:event_btnAgregarAccionEspecialActionPerformed
+
+    private void chkAnimarStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_chkAnimarStateChanged
+        guardarCambios = true;
+        itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+    }//GEN-LAST:event_chkAnimarStateChanged
+
+    private void chkMinimizarStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_chkMinimizarStateChanged
+        guardarCambios = true;
+        itemGuardar.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+        itemGuardarComo.setEnabled(jtAcciones.getRowCount() > 1 && guardarCambios);
+    }//GEN-LAST:event_chkMinimizarStateChanged
 
     /**
      * @param args the command line arguments
@@ -1655,7 +1754,7 @@ public class VentanaPrincipal extends javax.swing.JFrame implements NativeKeyLis
                     jNativeHook.addMouseListener(ventanaPrincipal);
                     ventanaPrincipal.setLocationRelativeTo(null);
                     ventanaPrincipal.setAlwaysOnTop(true);
-                    
+                    ventanaPrincipal.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
                     ventanaPrincipal.setVisible(true);
                 } catch (NativeHookException ex) {                    
                     Logger.getLogger(VentanaPrincipal.class.getName()).log(Level.SEVERE, null, ex);                    
